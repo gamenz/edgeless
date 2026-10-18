@@ -5,7 +5,11 @@ using static Edgeless.Shell.Settings.SettingsLayout;
 namespace Edgeless.Shell.Settings;
 
 /// <summary>Keeps the profile list and the detail fields in sync with <see cref="SettingsDraft.Profiles"/>.</summary>
-internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDescriptor> monitors, Func<int, nint> control)
+internal sealed class ProfileEditor(
+    SettingsDraft draft,
+    IReadOnlyList<MonitorDescriptor> monitors,
+    IReadOnlyDictionary<string, string> monitorNames,
+    Func<int, nint> control)
 {
     private static readonly string[] SizeModeLabels =
         ["fill — cover the monitor", "center — keep size, centered", "custom — custom position and size"];
@@ -130,7 +134,7 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         }
 
         var p = hasProfile ? draft.Profiles[_selected] : new GameProfile();
-        _monitorOptions = SettingsDraft.MonitorOptions(monitors);
+        _monitorOptions = SettingsDraft.MonitorOptions(monitors, monitorNames);
         var monitorIndex = SettingsDraft.MonitorIndex(_monitorOptions, p.Monitor);
         Win32Controls.SetItems(control(MonitorCombo), isCombo: true, _monitorOptions.Select(o => o.Label));
         Win32Controls.SetSelection(control(MonitorCombo), isCombo: true, monitorIndex);

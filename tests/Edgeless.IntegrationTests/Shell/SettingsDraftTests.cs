@@ -6,6 +6,8 @@ namespace Edgeless.IntegrationTests.Shell;
 
 public sealed class SettingsDraftTests
 {
+    private static readonly Dictionary<string, string> NoNames = [];
+
     private static AppConfig Sample() => new()
     {
         Enabled = false,
@@ -122,16 +124,33 @@ public sealed class SettingsDraftTests
             new(@"\\.\DISPLAY2", new RectI(-1920, 0, 0, 1080)),
         ];
 
-        var options = SettingsDraft.MonitorOptions(monitors);
+        var options = SettingsDraft.MonitorOptions(monitors, NoNames);
 
         Assert.Equal(["Current monitor", @"\\.\DISPLAY1 — 2560×1440", @"\\.\DISPLAY2 — 1920×1080"], options.Select(o => o.Label));
         Assert.Equal(["current", @"\\.\DISPLAY1", @"\\.\DISPLAY2"], options.Select(o => o.Value));
     }
 
     [Fact]
+    public void MonitorOptions_LabelShowsFriendlyNameButValueStaysDeviceName()
+    {
+        MonitorDescriptor[] monitors =
+        [
+            new(@"\\.\DISPLAY1", new RectI(0, 0, 2560, 1440)),
+            new(@"\\.\DISPLAY2", new RectI(-1920, 0, 0, 1080)),
+        ];
+        var names = new Dictionary<string, string> { [@"\\.\DISPLAY1"] = "DELL U2720Q" };
+
+        var options = SettingsDraft.MonitorOptions(monitors, names);
+
+        Assert.Equal("DELL U2720Q (DISPLAY1) — 2560×1440", options[1].Label);
+        Assert.Equal(@"\\.\DISPLAY2 — 1920×1080", options[2].Label);
+        Assert.Equal(@"\\.\DISPLAY1", options[1].Value);
+    }
+
+    [Fact]
     public void MonitorIndex_UnknownDeviceIsAppendedSoItIsNotLost()
     {
-        var options = SettingsDraft.MonitorOptions([new(@"\\.\DISPLAY1", new RectI(0, 0, 100, 100))]);
+        var options = SettingsDraft.MonitorOptions([new(@"\\.\DISPLAY1", new RectI(0, 0, 100, 100))], NoNames);
 
         var index = SettingsDraft.MonitorIndex(options, @"\\.\DISPLAY7");
 

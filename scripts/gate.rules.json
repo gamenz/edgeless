@@ -61,11 +61,13 @@
       "TrackPopupMenu", "DestroyMenu", "SetForegroundWindow", "FindWindow", "LoadImage", "SendMessage",
       "CreateFontIndirect", "DeleteObject", "ShellExecute", "InitCommonControlsEx", "IsDialogMessage", "EnableWindow",
       "SetWindowText", "MessageBox", "GetOpenFileName", "GetSystemMetricsForDpi", "SystemParametersInfoForDpi",
-      "LoadCursor", "GetStockObject", "CreateFile", "GetFinalPathNameByHandle"
+      "LoadCursor", "GetStockObject", "CreateFile", "GetFinalPathNameByHandle",
+      "GetDisplayConfigBufferSizes", "QueryDisplayConfig", "DisplayConfigGetDeviceInfo"
     ],
     "nativeMethodsAllowedPrefixes": ["WS_", "SWP_", "SW_", "WM_", "GWL_", "MONITOR", "DWM", "EVENT_", "WINEVENT_",
       "OBJID_", "PROCESS_QUERY_LIMITED_INFORMATION", "WINDOWPLACEMENT", "NOTIFYICON", "NIF_", "NIM_", "NIIF_", "MF_",
       "TPM_", "HKM_", "HOTKEYF_", "MOD_", "VK_", "ICC_", "CW_", "IDC_", "BS_", "ES_", "CBS_", "LBS_", "LB_", "CB_",
-      "BM_", "BN_", "EN_", "CBN_", "LBN_", "LOGFONT", "NONCLIENTMETRICS", "SPI_", "ERROR_", "HWND_", "CHILDID_SELF"]
+      "BM_", "BN_", "EN_", "CBN_", "LBN_", "LOGFONT", "NONCLIENTMETRICS", "SPI_", "ERROR_", "HWND_", "CHILDID_SELF",
+      "DISPLAYCONFIG_"]
   }
 }

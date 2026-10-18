@@ -94,9 +94,23 @@ internal sealed class SettingsDraft
     /// <summary>A fresh, normalized config built from the draft.</summary>
     public AppConfig ToConfig() => ConfigSerializer.Normalize(ConfigSerializer.Deserialize(ConfigSerializer.Serialize(_copy)));
 
-    public static List<MonitorOption> MonitorOptions(IEnumerable<MonitorDescriptor> monitors)
+    /// <summary>Combo options; the label shows the friendly name when known, the value is always the device name.</summary>
+    public static List<MonitorOption> MonitorOptions(
+        IEnumerable<MonitorDescriptor> monitors, IReadOnlyDictionary<string, string> friendlyNames)
         => [new("Current monitor", TargetRectCalculator.CurrentMonitor),
-            .. monitors.Select(m => new MonitorOption($"{m.DeviceName} — {m.Bounds.Width}×{m.Bounds.Height}", m.DeviceName))];
+            .. monitors.Select(m => new MonitorOption(MonitorLabel(m, friendlyNames), m.DeviceName))];
+
+    private static string MonitorLabel(MonitorDescriptor monitor, IReadOnlyDictionary<string, string> friendlyNames)
+    {
+        var size = $"{monitor.Bounds.Width}×{monitor.Bounds.Height}";
+        if (!friendlyNames.TryGetValue(monitor.DeviceName, out var friendly))
+        {
+            return $"{monitor.DeviceName} — {size}";
+        }
+
+        var shortDevice = monitor.DeviceName.StartsWith(@"\\.\", StringComparison.Ordinal) ? monitor.DeviceName[4..] : monitor.DeviceName;
+        return $"{friendly} ({shortDevice}) — {size}";
+    }
 
     /// <summary>Index of <paramref name="value"/>; a disconnected device is appended so saving does not lose it.</summary>
     public static int MonitorIndex(List<MonitorOption> options, string value)

@@ -53,7 +53,7 @@ internal sealed unsafe class SettingsWindow
 
         _current = this;
         CreateControls();
-        _editor = new ProfileEditor(_draft, MonitorApi.EnumerateAll(), id => _controls[id]);
+        _editor = new ProfileEditor(_draft, MonitorApi.EnumerateAll(), DisplayNames.Query(), id => _controls[id]);
         _editor.Initialize();
         Win32Controls.SetHotkey(_controls[HotkeyControl], SettingsDraft.HotkeyToControl(_draft.Hotkey));
         Win32Controls.SetItems(_controls[AutostartCombo], isCombo: true, AutostartLabels);
