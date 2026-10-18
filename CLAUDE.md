@@ -111,17 +111,25 @@ edgeless/
 │     ├─ Windowing/                # finder, registry, BorderlessApplier (apply/restore)
 │     ├─ Events/                   # WinEventWatcher, HotkeyManager
 │     ├─ App/                      # EdgelessController (partial files), AppHost composition root
-│     ├─ Shell/                    # message window, tray icon/menu, notifier
-│     │  └─ Settings/              # settings window split into window/layout/profile editor/controls
+│     ├─ Shell/                    # message window, tray icon/menu (+ pure TrayMenuModel), notifier
+│     │  └─ Settings/              # settings window: window/layout/profile editor/controls + pure SettingsDraft
 │     ├─ Platform/                 # paths, command line, single instance, elevation, autostart
 │     ├─ Resources/                # app.ico
 │     ├─ NativeMethods.txt / NativeMethods.json / app.manifest
 │     └─ Program.cs                # tiny: parse args, hand off to AppHost
 └─ tests/                          # test folders mirror src folders 1:1
-   ├─ Edgeless.Core.Tests/         # xUnit unit tests + InteropAuditTests
-   ├─ Edgeless.IntegrationTests/   # real-window tests against TestWindow
-   └─ Edgeless.TestWindow/         # fake "game" window (WinForms, never shipped)
+   ├─ Edgeless.Core.Tests/         # xUnit unit tests + Audit/InteropAuditTests
+   ├─ Edgeless.IntegrationTests/   # real-window tests against TestWindow (+ Support/ helpers)
+   └─ Edgeless.TestWindow/         # fake "game" window (WinForms, transparent unless --visible, never shipped)
 ```
+
+### Build and test
+- Toolchain: .NET 10 SDK (pinned in `global.json`, tests use Microsoft.Testing.Platform) + VS Build Tools C++
+  workload (Native AOT linker). If publish says `vswhere.exe` is not recognized, add
+  `C:\Program Files (x86)\Microsoft Visual Studio\Installer` to `PATH`.
+- `dotnet test` — all tests; integration tests open real (transparent) windows, so they need a desktop session.
+- `dotnet publish src/Edgeless -c Release` — Native AOT, win-x64, x64 only (CsWin32 needs it for `*WindowLongPtr`).
+- `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1` — the gate (§5).
 
 ## 4. Conventions
 - Identifiers and code comments in English; replies to the user in Vietnamese.
