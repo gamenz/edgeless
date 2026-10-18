@@ -31,3 +31,19 @@ WINEVENT_SKIPOWNPROCESS
 OpenProcess
 QueryFullProcessImageName
 CloseHandle
+// Own-window only (hidden message window, timers, hotkey).
+RegisterClassEx
+CreateWindowEx
+DefWindowProc
+DestroyWindow
+GetMessage
+TranslateMessage
+DispatchMessage
+PostMessage
+PostQuitMessage
+RegisterWindowMessage
+SetTimer
+KillTimer
+RegisterHotKey
+UnregisterHotKey
+GetModuleHandle
