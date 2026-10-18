@@ -87,7 +87,7 @@ internal sealed unsafe class SettingsWindow
         const uint Combo = Tab | Win32Controls.CBS_DROPDOWNLIST | Win32Controls.WS_VSCROLL;
         const uint Edit = Tab | Win32Controls.ES_AUTOHSCROLL;
         Add(ProfileList, "LISTBOX", "", Tab | Win32Controls.LBS_NOTIFY | Win32Controls.LBS_NOINTEGRALHEIGHT
-            | Win32Controls.WS_VSCROLL, Win32Controls.WS_EX_CLIENTEDGE);
+            | Win32Controls.WS_VSCROLL | Win32Controls.WS_HSCROLL, Win32Controls.WS_EX_CLIENTEDGE);
         Add(AddButton, "BUTTON", "Thêm…", Tab);
         Add(RemoveButton, "BUTTON", "Xoá", Tab);
         Add(PathEdit, "EDIT", "", Edit | Win32Controls.ES_READONLY, Win32Controls.WS_EX_CLIENTEDGE);
@@ -127,6 +127,8 @@ internal sealed unsafe class SettingsWindow
             _font = PInvoke.CreateFontIndirect(&metrics.lfMessageFont);
         }
 
+        _editor.Dpi = dpi;
+        _editor.UpdateListExtent();
         for (var i = 0; i < Labels.Length; i++)
         {
             Place(_labels[i], Labels[i].X, Labels[i].Y + 2, Labels[i].Width, 20, dpi);

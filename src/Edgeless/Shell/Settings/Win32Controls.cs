@@ -11,6 +11,7 @@ internal static unsafe class Win32Controls
     public const uint WS_VISIBLE = 0x10000000;
     public const uint WS_TABSTOP = 0x00010000;
     public const uint WS_VSCROLL = 0x00200000;
+    public const uint WS_HSCROLL = 0x00100000;
     public const uint WS_EX_CLIENTEDGE = 0x00000200;
     public const uint LBS_NOTIFY = 0x0001;
     public const uint LBS_NOINTEGRALHEIGHT = 0x0100;
@@ -30,6 +31,7 @@ internal static unsafe class Win32Controls
     private const uint LB_RESETCONTENT = 0x0184;
     private const uint LB_SETCURSEL = 0x0186;
     private const uint LB_GETCURSEL = 0x0188;
+    private const uint LB_SETHORIZONTALEXTENT = 0x0194;
     private const uint CB_ADDSTRING = 0x0143;
     private const uint CB_GETCURSEL = 0x0147;
     private const uint CB_RESETCONTENT = 0x014B;
@@ -82,6 +84,10 @@ internal static unsafe class Win32Controls
     public static ushort GetHotkey(nint control) => (ushort)Send(control, HKM_GETHOTKEY, 0, 0);
 
     public static void SetHotkey(nint control, ushort value) => Send(control, HKM_SETHOTKEY, value, 0);
+
+    /// <summary>Scrollable width of a listbox with WS_HSCROLL, in pixels.</summary>
+    public static void SetHorizontalExtent(nint listBox, int pixels)
+        => Send(listBox, LB_SETHORIZONTALEXTENT, (nuint)Math.Max(0, pixels), 0);
 
     private static nint Send(nint control, uint message, nuint wParam, nint lParam)
         => PInvoke.SendMessage(new HWND(control), message, wParam, lParam);

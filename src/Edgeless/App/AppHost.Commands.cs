@@ -115,7 +115,7 @@ internal sealed partial class AppHost
 
         var autostartChanged = newConfig.Autostart != _controller.Config.Autostart;
         newConfig.Enabled = _controller.Enabled;
-        _controller.ApplyConfig(newConfig);
+        _controller.ApplyConfig(PathCanonicalizer.CanonicalizeProfiles(newConfig));
         if (autostartChanged)
         {
             SetAutostart(newConfig.Autostart); // also saves

@@ -1,5 +1,6 @@
 using Edgeless.Core.Rules;
 using Edgeless.Interop;
+using Edgeless.Platform;
 
 namespace Edgeless.Windowing;
 
@@ -14,7 +15,7 @@ internal sealed class ProcessPathCache(TimeProvider time, Func<uint, string?> qu
     private readonly Dictionary<uint, (string Path, DateTimeOffset Expires)> _paths = [];
 
     public ProcessPathCache()
-        : this(TimeProvider.System, ForeignProcess.TryGetImagePath)
+        : this(TimeProvider.System, QueryCanonicalImagePath)
     {
     }
 
@@ -38,4 +39,8 @@ internal sealed class ProcessPathCache(TimeProvider time, Func<uint, string?> qu
     }
 
     public void Forget(uint pid) => _paths.Remove(pid);
+
+    /// <summary>Process image path resolved to its real location (same form as profile paths).</summary>
+    private static string? QueryCanonicalImagePath(uint pid)
+        => ForeignProcess.TryGetImagePath(pid) is { } path ? PathCanonicalizer.Canonicalize(path) : null;
 }

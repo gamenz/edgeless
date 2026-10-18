@@ -39,7 +39,7 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
     public void Add(nint owner)
     {
         Commit();
-        var path = FileDialog.PickExe(owner, null);
+        var path = PickCanonical(owner, null);
         var index = path is null ? -1 : draft.AddProfile(path);
         if (index >= 0)
         {
@@ -56,12 +56,16 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         }
 
         Commit();
-        var path = FileDialog.PickExe(owner, draft.Profiles[_selected].Path);
+        var path = PickCanonical(owner, draft.Profiles[_selected].Path);
         if (path is not null && draft.ReplacePath(_selected, path))
         {
             RefreshList(_selected);
         }
     }
+
+    /// <summary>Open File dialog result resolved through subst drives / junctions, like process paths.</summary>
+    private static string? PickCanonical(nint owner, string? initialPath)
+        => FileDialog.PickExe(owner, initialPath) is { } path ? Platform.PathCanonicalizer.Canonicalize(path) : null;
 
     public void Remove()
     {
@@ -96,9 +100,22 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         p.ApplyDelayMs = SettingsDraft.ParseInt(Win32Controls.GetText(control(DelayEdit)), p.ApplyDelayMs);
     }
 
+    /// <summary>Current DPI of the settings window; used to size the list's horizontal scroll range.</summary>
+    public uint Dpi { get; set; } = 96;
+
+    /// <summary>Lets long labels scroll horizontally (approximate width, generous so nothing is cut).</summary>
+    public void UpdateListExtent()
+    {
+        var longest = draft.Profiles.Select(SettingsDraft.ListLabel).Select(l => l.Length).DefaultIfEmpty(0).Max();
+        Win32Controls.SetHorizontalExtent(control(ProfileList), Scale(longest * AverageCharWidth, Dpi));
+    }
+
+    private const int AverageCharWidth = 8; // 96-DPI pixels per character of the UI font, rounded up
+
     private void RefreshList(int select)
     {
         Win32Controls.SetItems(control(ProfileList), isCombo: false, draft.Profiles.Select(SettingsDraft.ListLabel));
+        UpdateListExtent();
         Win32Controls.SetSelection(control(ProfileList), isCombo: false, select);
         _selected = select;
         Load();

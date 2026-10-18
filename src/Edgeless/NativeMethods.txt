@@ -73,3 +73,6 @@ IDC_ARROW
 // Own-window only (startup error dialog).
 MessageBox
 GetOpenFileName
+// Own files only (canonical path of a chosen exe, read attributes only).
+CreateFile
+GetFinalPathNameByHandle

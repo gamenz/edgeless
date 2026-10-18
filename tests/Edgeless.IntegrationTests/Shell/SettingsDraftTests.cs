@@ -93,9 +93,13 @@ public sealed class SettingsDraftTests
         Assert.Equal(@"D:\Games\B\b.exe", draft.Profiles[1].Path);
     }
 
-    [Fact]
-    public void ListLabel_ShowsNameAndFolder()
-        => Assert.Equal(@"game.exe — D:\Games\A", SettingsDraft.ListLabel(new GameProfile { Path = @"D:\Games\A\Game.exe" }));
+    [Theory]
+    [InlineData(@"D:\Games\A\Game.exe", @"game.exe — D:\Games\A")]
+    [InlineData(@"D:\Game.exe", @"game.exe — D:\")]
+    [InlineData(@"D:\Work\edgeless\tests\bin\Debug\Game.exe", @"game.exe — D:\…\bin\Debug")]
+    [InlineData(@"\\server\share\games\x\y\Game.exe", @"game.exe — \\server\share\…\x\y")]
+    public void ListLabel_ShowsNameAndShortFolder(string path, string expected)
+        => Assert.Equal(expected, SettingsDraft.ListLabel(new GameProfile { Path = path }));
 
     [Fact]
     public void RemoveAt_ClampsSelection()

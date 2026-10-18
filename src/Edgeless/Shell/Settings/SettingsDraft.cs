@@ -72,9 +72,17 @@ internal sealed class SettingsDraft
         return true;
     }
 
-    /// <summary>List text: "file.exe — folder".</summary>
+    /// <summary>List text "file.exe — folder"; deep folders keep the root and the last two levels ("D:\…\bin\Debug").</summary>
     public static string ListLabel(GameProfile profile)
-        => $"{profile.ExeName} — {System.IO.Path.GetDirectoryName(profile.Path)}";
+    {
+        var folder = System.IO.Path.GetDirectoryName(profile.Path) ?? "";
+        var root = System.IO.Path.GetPathRoot(folder) ?? "";
+        var levels = folder[root.Length..].Split('\\', StringSplitOptions.RemoveEmptyEntries);
+        var shortFolder = levels.Length <= 2
+            ? folder
+            : $"{root.TrimEnd('\\')}\\…\\{levels[^2]}\\{levels[^1]}";
+        return $"{profile.ExeName} — {shortFolder}";
+    }
 
     /// <summary>Removes a profile; returns the index to select next, or -1 when the list is empty.</summary>
     public int RemoveAt(int index)

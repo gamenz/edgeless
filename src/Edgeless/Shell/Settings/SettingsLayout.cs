@@ -3,7 +3,7 @@ namespace Edgeless.Shell.Settings;
 /// <summary>Control ids and positions in 96-DPI units; scaled to the window's DPI at layout time.</summary>
 internal static class SettingsLayout
 {
-    public const int ClientWidth = 632;
+    public const int ClientWidth = 672;
     public const int ClientHeight = 436;
 
     public const int ProfileList = 100;
@@ -30,39 +30,39 @@ internal static class SettingsLayout
     /// <summary>Static labels: (text, x, y, width).</summary>
     public static readonly (string Text, int X, int Y, int Width)[] Labels =
     [
-        ("Danh sách game", 12, 12, 200),
-        ("Đường dẫn", 228, 14, 118),
-        ("Màn hình", 228, 76, 118),
-        ("Chế độ kích thước", 228, 108, 118),
-        ("Tuỳ chỉnh x, y, w, h", 228, 140, 118),
-        ("Delay áp dụng (ms)", 228, 202, 118),
-        ("Hotkey", 228, 270, 118),
-        ("Tự khởi động", 228, 326, 118),
+        ("Danh sách game", 12, 12, 240),
+        ("Đường dẫn", 268, 14, 118),
+        ("Màn hình", 268, 76, 118),
+        ("Chế độ kích thước", 268, 108, 118),
+        ("Tuỳ chỉnh x, y, w, h", 268, 140, 118),
+        ("Delay áp dụng (ms)", 268, 202, 118),
+        ("Hotkey", 268, 270, 118),
+        ("Tự khởi động", 268, 326, 118),
     ];
 
     /// <summary>Control rectangles by id: (x, y, width, height). Combobox heights include the drop-down.</summary>
     public static readonly Dictionary<int, (int X, int Y, int Width, int Height)> Bounds = new()
     {
-        [ProfileList] = (12, 34, 200, 300),
-        [AddButton] = (12, 342, 96, 28),
-        [RemoveButton] = (116, 342, 96, 28),
-        [PathEdit] = (350, 10, 190, 24),
-        [ChangePathButton] = (545, 10, 75, 24),
-        [EnabledCheck] = (350, 44, 270, 22),
-        [MonitorCombo] = (350, 72, 270, 200),
-        [SizeModeCombo] = (350, 104, 270, 200),
-        [CustomX] = (350, 136, 62, 24),
-        [CustomY] = (419, 136, 62, 24),
-        [CustomWidth] = (488, 136, 62, 24),
-        [CustomHeight] = (557, 136, 63, 24),
-        [PopupCheck] = (350, 170, 270, 22),
-        [DelayEdit] = (350, 198, 100, 24),
-        [HotkeyControl] = (350, 266, 200, 24),
-        [HotkeyWarning] = (350, 294, 270, 20),
-        [AutostartCombo] = (350, 322, 270, 200),
+        [ProfileList] = (12, 34, 240, 300),
+        [AddButton] = (12, 342, 116, 28),
+        [RemoveButton] = (136, 342, 116, 28),
+        [PathEdit] = (390, 10, 190, 24),
+        [ChangePathButton] = (585, 10, 75, 24),
+        [EnabledCheck] = (390, 44, 270, 22),
+        [MonitorCombo] = (390, 72, 270, 200),
+        [SizeModeCombo] = (390, 104, 270, 200),
+        [CustomX] = (390, 136, 62, 24),
+        [CustomY] = (459, 136, 62, 24),
+        [CustomWidth] = (528, 136, 62, 24),
+        [CustomHeight] = (597, 136, 63, 24),
+        [PopupCheck] = (390, 170, 270, 22),
+        [DelayEdit] = (390, 198, 100, 24),
+        [HotkeyControl] = (390, 266, 200, 24),
+        [HotkeyWarning] = (390, 294, 270, 20),
+        [AutostartCombo] = (390, 322, 270, 200),
         [OpenConfigButton] = (12, 394, 140, 30),
-        [SaveButton] = (428, 394, 92, 30),
-        [CancelButton] = (528, 394, 92, 30),
+        [SaveButton] = (468, 394, 92, 30),
+        [CancelButton] = (568, 394, 92, 30),
     };
 
     public static int Scale(int value, uint dpi) => (int)Math.Round(value * dpi / 96.0);

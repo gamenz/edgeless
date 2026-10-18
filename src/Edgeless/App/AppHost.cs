@@ -41,7 +41,8 @@ internal sealed partial class AppHost : IDisposable
         _applier = new BorderlessApplier(_registry, _log);
         _hotkey = new HotkeyManager(_window.Handle);
         var finder = new WindowFinder(new ProcessPathCache(), (uint)Environment.ProcessId);
-        _controller = new EdgelessController(load.Config, finder, _applier, _registry, new WinEventWatcher(), _window,
+        var config = PathCanonicalizer.CanonicalizeProfiles(load.Config);
+        _controller = new EdgelessController(config, finder, _applier, _registry, new WinEventWatcher(), _window,
             _notifier, new ReapplyGuard(TimeProvider.System), _log);
 
         _tray.Add();
