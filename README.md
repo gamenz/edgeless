@@ -23,8 +23,8 @@ your game's terms before using it.
 1. Run `Edgeless.exe`; an icon appears in the system tray (Windows 11 may hide it behind the **^** arrow). There is
    no main window; running `Edgeless.exe` again opens the settings window.
 2. Add a game, either way:
-   - Start the game in Windowed mode, focus it, then right-click the tray icon → **Add "<game>.exe" to list**
-     (the most reliable way: it records the exe that is actually running).
+   - Start the game in Windowed mode, then right-click the tray icon → **Add to list** → pick the game from the
+     running apps (the most reliable way: it records the exe that is actually running).
    - **Settings…** → **Add…** → pick the game's exe.
 
    Games are identified by the **full path** of their exe, so two games with the same exe name in different folders

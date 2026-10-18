@@ -3,7 +3,7 @@ namespace Edgeless.Shell;
 internal enum TrayCommand
 {
     ToggleEnabled,
-    AddLastForeground,
+    AddWindow,
     RestoreManaged,
     OpenSettings,
     ToggleAutostart,
@@ -14,8 +14,7 @@ internal enum TrayCommand
 
 internal sealed record TrayMenuState(
     bool Enabled,
-    string? LastForegroundExe,
-    bool LastForegroundListed,
+    IReadOnlyList<(nint Hwnd, string Label)> Addable,
     IReadOnlyList<(nint Hwnd, string Label)> Managed,
     bool AutostartOn,
     bool IsElevated);
@@ -38,9 +37,9 @@ internal static class TrayMenuModel
 
     public static List<TrayMenuItem> Build(TrayMenuState state)
     {
-        var addText = state.LastForegroundExe is null
-            ? "Add focused window to list"
-            : $"Add \"{state.LastForegroundExe}\" to list";
+        var addable = state.Addable
+            .Select(a => new TrayMenuItem(a.Label, TrayCommand.AddWindow, Hwnd: a.Hwnd))
+            .ToList();
         var managed = state.Managed
             .Select(m => new TrayMenuItem(m.Label, TrayCommand.RestoreManaged, Hwnd: m.Hwnd))
             .ToList();
@@ -48,8 +47,7 @@ internal static class TrayMenuModel
         var items = new List<TrayMenuItem>
         {
             new("Enable Edgeless", TrayCommand.ToggleEnabled, Checked: state.Enabled),
-            new(addText, TrayCommand.AddLastForeground,
-                Enabled: state.LastForegroundExe is not null && !state.LastForegroundListed),
+            new("Add to list", null, Enabled: addable.Count > 0) { Children = addable },
             new("Managed windows", null, Enabled: managed.Count > 0) { Children = managed },
             TrayMenuItem.Separator,
             new("Settings…", TrayCommand.OpenSettings),

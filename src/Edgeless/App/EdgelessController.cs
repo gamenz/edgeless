@@ -27,9 +27,6 @@ internal sealed partial class EdgelessController(
 
     public bool Enabled => _config.Enabled;
 
-    /// <summary>Last foreground window that is not Edgeless or the shell (for "Add to list").</summary>
-    public WindowInfo? LastForeground { get; private set; }
-
     public IReadOnlyCollection<ManagedWindow> Managed => registry.All;
 
     public AppConfig Config => _config;
@@ -88,21 +85,28 @@ internal sealed partial class EdgelessController(
         ApplyNow(info, FindProfile(info.ImagePath) ?? new GameProfile(), isReapply: false);
     }
 
-    /// <summary>Adds the last foreground window's exe with a default profile and applies it. Null if none or listed.</summary>
-    public GameProfile? AddLastForegroundToProfiles()
+    /// <summary>Running exes with a window that are not listed yet (tray "Add to list"), sorted by exe name.</summary>
+    public IReadOnlyList<WindowInfo> FindAddableWindows()
+        => finder.FindAddableWindows()
+            .Where(w => !IsListed(w.ImagePath))
+            .OrderBy(w => w.ExeName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+    /// <summary>Adds the exe of <paramref name="hwnd"/> with a default profile and applies it. Null if gone or listed.</summary>
+    public GameProfile? AddWindowToProfiles(nint hwnd)
     {
-        var last = LastForeground;
-        if (last is null || last.ImagePath.Length == 0 || _config.Profiles.Any(p => ExePath.AreSame(p.Path, last.ImagePath)))
+        if (!ForeignWindow.IsWindow(hwnd) || !finder.TryDescribe(hwnd, out var info) || info.ImagePath.Length == 0
+            || finder.IsExcluded(info) || IsListed(info.ImagePath))
         {
             return null;
         }
 
-        var profile = GameProfile.CreateDefault(last.ImagePath);
+        var profile = GameProfile.CreateDefault(info.ImagePath);
         _config.Profiles.Add(profile);
         log.Info($"Added profile: {profile.Path}");
-        if (Enabled && ForeignWindow.IsWindow(last.Hwnd))
+        if (Enabled)
         {
-            ApplyNow(MainWindowOf(last), profile, isReapply: false);
+            ApplyNow(MainWindowOf(info), profile, isReapply: false);
         }
 
         return profile;
@@ -147,6 +151,8 @@ internal sealed partial class EdgelessController(
         applier.RestoreAll();
         watcher.Dispose();
     }
+
+    private bool IsListed(string imagePath) => _config.Profiles.Any(p => ExePath.AreSame(p.Path, imagePath));
 
     private GameProfile? FindProfile(string imagePath)
         => _config.Profiles.FirstOrDefault(p => p.Enabled && ExePath.AreSame(p.Path, imagePath));

@@ -115,8 +115,8 @@ In `fill`, a borderless window exactly at `rcMonitor` is also treated as matchin
 
 **Global hook (one, for the app's lifetime):** `SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
 EVENT_SYSTEM_FOREGROUND, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS)`.
-- On every foreground change: remember the "last foreground window not owned by Edgeless/the shell" (used by
-  "Add to list"); resolve the process path → if it matches an enabled profile → schedule an apply after `applyDelayMs`
+- On every foreground change: resolve the process path → if it matches an enabled profile → schedule an apply after
+  `applyDelayMs`
   (default 500 ms, one-shot timer). Many games reposition their window right after startup.
 
 **Startup scan:** one `EnumWindows` pass to apply to listed games that are already running.
@@ -164,9 +164,10 @@ Tray icon via `Shell_NotifyIcon`. Tooltip: `Edgeless — On (n windows)` / `Edge
 settings. Right-click menu (all UI copy is English):
 
 - ☑ **Enable Edgeless**
-- **Add "<exe>" to list** — add the last foreground window's process (§4.4) by its full path; the label shows the file
-  name. Disabled when there is none or that path is already listed. Adds it with the default profile and applies
-  immediately.
+- **Add to list ▸** — submenu of running exes that have a visible, titled, non-excluded top-level window and are not
+  listed yet (one entry per full path, its main window; label `exe — title`, sorted by exe name), built when the menu
+  opens. Clicking one adds that exe by its full path with the default profile and applies immediately. Disabled when
+  the submenu would be empty.
 - **Managed windows ▸** — submenu of managed windows (exe + title); clicking one restores that window.
 - **Settings…**
 - ☑ **Start with Windows**

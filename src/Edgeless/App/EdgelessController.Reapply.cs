@@ -21,7 +21,6 @@ internal sealed partial class EdgelessController
             return;
         }
 
-        LastForeground = info;
         var profile = Enabled ? FindProfile(info.ImagePath) : null;
         if (profile is null || registry.IsUserDisabled(hwnd, info.Pid))
         {

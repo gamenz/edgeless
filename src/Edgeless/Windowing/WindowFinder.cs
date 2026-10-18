@@ -62,8 +62,36 @@ internal sealed class WindowFinder(ProcessPathCache cache, uint ownPid)
             }
         }
 
+        return SelectMainWindows(byPid.Values);
+    }
+
+    /// <summary>
+    /// The main window of every running exe (one per path) with a titled, visible, non-excluded window.
+    /// Feeds the tray "Add to list" submenu.
+    /// </summary>
+    public IReadOnlyList<WindowInfo> FindAddableWindows()
+    {
+        var byPath = new Dictionary<string, List<nint>>(StringComparer.OrdinalIgnoreCase);
+        foreach (var hwnd in ForeignWindow.EnumTopLevel())
+        {
+            if (!ForeignWindow.IsVisible(hwnd) || ForeignWindow.GetTitle(hwnd).Length == 0
+                || !TryDescribe(hwnd, out var info) || info.ImagePath.Length == 0 || IsExcluded(info))
+            {
+                continue;
+            }
+
+            (byPath.TryGetValue(info.ImagePath, out var list) ? list : byPath[info.ImagePath] = []).Add(hwnd);
+        }
+
+        return SelectMainWindows(byPath.Values);
+    }
+
+    public void ForgetProcess(uint pid) => cache.Forget(pid);
+
+    private List<WindowInfo> SelectMainWindows(IEnumerable<List<nint>> groups)
+    {
         var result = new List<WindowInfo>();
-        foreach (var (_, windows) in byPid)
+        foreach (var windows in groups)
         {
             var main = WindowSelector.SelectLargest(windows.Select(ForeignWindow.Describe));
             if (main != 0 && TryDescribe(main, out var info))
@@ -74,6 +102,4 @@ internal sealed class WindowFinder(ProcessPathCache cache, uint ownPid)
 
         return result;
     }
-
-    public void ForgetProcess(uint pid) => cache.Forget(pid);
 }

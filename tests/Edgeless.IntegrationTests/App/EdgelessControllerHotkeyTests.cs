@@ -55,16 +55,20 @@ public sealed class EdgelessControllerHotkeyTests
     }
 
     [Fact]
-    public void AddLastForeground_AddsDefaultProfileAndApplies()
+    public void AddWindow_ListedAsAddable_AddsDefaultProfileAndApplies()
     {
         using var window = TestWindowProcess.Start();
         using var host = new MessageLoopHost(new AppConfig());
-        host.Invoke(() => host.Controller.OnForeground(window.Hwnd));
 
-        var added = host.Invoke(host.Controller.AddLastForegroundToProfiles);
+        var addable = host.Invoke(host.Controller.FindAddableWindows);
+        Assert.Contains(addable, w => w.Hwnd == window.Hwnd);
+        Assert.DoesNotContain(addable, w => w.Pid == (uint)Environment.ProcessId);
+
+        var added = host.Invoke(() => host.Controller.AddWindowToProfiles(window.Hwnd));
 
         Assert.Equal(TestWindowProcess.ExePath, added?.Path, StringComparer.OrdinalIgnoreCase);
         Assert.True(IsBorderless(window.Hwnd));
-        Assert.Null(host.Invoke(host.Controller.AddLastForegroundToProfiles));
+        Assert.Null(host.Invoke(() => host.Controller.AddWindowToProfiles(window.Hwnd)));
+        Assert.DoesNotContain(host.Invoke(host.Controller.FindAddableWindows), w => w.Hwnd == window.Hwnd);
     }
 }

@@ -52,9 +52,6 @@ public sealed class EdgelessControllerTests
         Thread.Sleep(400);
 
         Assert.False(IsBorderless(window.Hwnd));
-        Assert.Equal("edgeless.testwindow.exe", host.Invoke(() => host.Controller.LastForeground?.ExeName));
-        Assert.Equal(TestWindowProcess.ExePath, host.Invoke(() => host.Controller.LastForeground?.ImagePath),
-            StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]

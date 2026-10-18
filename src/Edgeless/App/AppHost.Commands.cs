@@ -28,14 +28,15 @@ internal sealed partial class AppHost
 
     private TrayMenuState BuildMenuState()
     {
-        var last = _controller.LastForeground;
+        var addable = _controller.FindAddableWindows()
+            .Select(w => (w.Hwnd, Label: $"{w.ExeName} — {ForeignWindow.GetTitle(w.Hwnd)}"))
+            .ToList();
         var managed = _registry.All
             .Select(w => (w.Hwnd, Label: $"{w.ExeName} — {ForeignWindow.GetTitle(w.Hwnd)}"))
             .ToList();
         return new TrayMenuState(
             _controller.Enabled,
-            last?.ExeName,
-            last is not null && _controller.Config.Profiles.Any(p => ExePath.AreSame(p.Path, last.ImagePath)),
+            addable,
             managed,
             AutostartOn: IsAutostartOn(),
             Elevation.IsElevated);
@@ -50,8 +51,8 @@ internal sealed partial class AppHost
                 _controller.SetEnabled(!_controller.Enabled);
                 SaveConfig();
                 break;
-            case TrayCommand.AddLastForeground:
-                if (_controller.AddLastForegroundToProfiles() is not null)
+            case TrayCommand.AddWindow:
+                if (_controller.AddWindowToProfiles(hwnd) is not null)
                 {
                     SaveConfig();
                 }
