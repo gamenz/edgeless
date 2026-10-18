@@ -1,0 +1,69 @@
+{
+  "excludeDirs": [".git", ".superpowers", ".vs", ".vscode", ".idea", "bin", "obj", "publish", "artifacts", "TestResults", "node_modules"],
+  "textExtensions": [".cs", ".md", ".json", ".csproj", ".props", ".targets", ".slnx", ".ps1", ".txt", ".manifest",
+    ".xml", ".yml", ".yaml", ".editorconfig", ".gitattributes", ".gitignore"],
+
+  "sizeRules": [
+    { "name": "agent-instructions", "include": ["CLAUDE.md"], "warnLines": 160, "maxLines": 200 },
+    { "name": "nested-agent-instructions", "include": ["**/CLAUDE.md"], "warnLines": 40, "maxLines": 60 },
+    { "name": "spec", "include": ["docs/specs/*.md"], "warnLines": 400, "maxLines": 500 },
+    { "name": "plan", "include": ["docs/plans/*.md"], "warnLines": 550, "maxLines": 650 },
+    { "name": "docs", "include": ["**/*.md"], "warnLines": 300, "maxLines": 400 },
+    { "name": "source", "include": ["src/**/*.cs"], "warnLines": 250, "maxLines": 350, "maxLineLength": 140 },
+    { "name": "tests", "include": ["tests/**/*.cs"], "warnLines": 350, "maxLines": 500, "maxLineLength": 140 },
+    { "name": "scripts", "include": ["scripts/**"], "warnLines": 300, "maxLines": 400, "maxLineLength": 140 },
+    { "name": "project-files", "include": ["**/*.csproj", "**/*.props", "**/*.targets", "**/*.slnx", "**/*.manifest", "**/*.json"],
+      "warnLines": 120, "maxLines": 200 }
+  ],
+
+  "folderRule": { "include": ["src/**", "tests/**"], "maxFilesPerFolder": 12 },
+
+  "exceptions": [],
+
+  "planLinks": {
+    "comment": "Nothing outside docs/plans/ may link to or name a plan file.",
+    "patterns": ["\\]\\([^)\\s]*plans/[^)\\s]*\\)", "docs/plans/[\\w.-]+\\.md"]
+  },
+
+  "antiCheat": {
+    "comment": "Single source of truth for the CLAUDE.md section 1 audit. Also read by tests/Edgeless.Core.Tests/InteropAuditTests.cs.",
+    "sourceInclude": ["src/**/*.cs", "src/**/NativeMethods.txt"],
+    "forbiddenTokens": [
+      "SetWindowsHookEx", "WINEVENT_INCONTEXT", "ReadProcessMemory", "WriteProcessMemory", "VirtualAllocEx",
+      "VirtualProtectEx", "CreateRemoteThread", "NtCreateThreadEx", "QueueUserAPC", "SetThreadContext", "OpenThread",
+      "SuspendThread", "DebugActiveProcess", "DuplicateHandle", "NtQueryInformationProcess", "EnumProcessModules",
+      "Module32First", "PROCESS_VM_READ", "PROCESS_VM_WRITE", "PROCESS_VM_OPERATION", "PROCESS_ALL_ACCESS",
+      "GWLP_WNDPROC", "GWLP_USERDATA", "GWLP_HINSTANCE", "GWLP_ID", "SendInput", "keybd_event", "mouse_event",
+      "BitBlt", "PrintWindow", ".MainModule", ".Modules", "LoadLibrary"
+    ],
+    "restrictedTokens": [
+      { "token": "OpenProcess", "allowedIn": ["src/Edgeless/Interop/ForeignProcess.cs", "src/**/NativeMethods.txt"] },
+      { "token": "QueryFullProcessImageName", "allowedIn": ["src/Edgeless/Interop/ForeignProcess.cs", "src/**/NativeMethods.txt"] },
+      { "token": "SetWindowLongPtr", "allowedIn": ["src/Edgeless/Interop/ForeignWindow.cs", "src/**/NativeMethods.txt"] },
+      { "token": "SetWinEventHook", "allowedIn": ["src/Edgeless/Interop/WinEventApi.cs", "src/**/NativeMethods.txt"] }
+    ],
+    "openProcessFile": "src/Edgeless/Interop/ForeignProcess.cs",
+    "openProcessRequiredRight": "PROCESS_QUERY_LIMITED_INFORMATION",
+    "nativeMethodsFile": "src/Edgeless/NativeMethods.txt",
+    "nativeMethodsForeignWhitelist": [
+      "EnumWindows", "GetWindowThreadProcessId", "IsWindow", "IsWindowVisible", "IsIconic", "IsZoomed", "GetWindow",
+      "GetAncestor", "GetClassName", "GetWindowTextLength", "GetWindowText", "GetForegroundWindow", "GetWindowLongPtr",
+      "SetWindowLongPtr", "GetWindowRect", "GetClientRect", "GetWindowPlacement", "SetWindowPlacement",
+      "DwmGetWindowAttribute", "SetWindowPos", "ShowWindow", "MonitorFromWindow", "MonitorFromRect", "GetMonitorInfo",
+      "EnumDisplayMonitors", "GetDpiForWindow", "SetWinEventHook", "UnhookWinEvent", "OpenProcess",
+      "QueryFullProcessImageName", "CloseHandle", "SetLastError"
+    ],
+    "nativeMethodsOwnWindowOnly": [
+      "RegisterClassEx", "CreateWindowEx", "DefWindowProc", "DestroyWindow", "GetMessage", "TranslateMessage",
+      "DispatchMessage", "PostMessage", "PostQuitMessage", "RegisterWindowMessage", "SetTimer", "KillTimer",
+      "RegisterHotKey", "UnregisterHotKey", "GetModuleHandle", "Shell_NotifyIcon", "CreatePopupMenu", "AppendMenu",
+      "TrackPopupMenu", "DestroyMenu", "SetForegroundWindow", "FindWindow", "LoadImage", "SendMessage",
+      "CreateFontIndirect", "DeleteObject", "ShellExecute", "InitCommonControlsEx", "IsDialogMessage", "EnableWindow",
+      "SetWindowText", "GetSystemMetricsForDpi", "SystemParametersInfoForDpi", "LoadCursor", "GetStockObject"
+    ],
+    "nativeMethodsAllowedPrefixes": ["WS_", "SWP_", "SW_", "WM_", "GWL_", "MONITOR", "DWM", "EVENT_", "WINEVENT_",
+      "OBJID_", "PROCESS_QUERY_LIMITED_INFORMATION", "WINDOWPLACEMENT", "NOTIFYICON", "NIF_", "NIM_", "NIIF_", "MF_",
+      "TPM_", "HKM_", "HOTKEYF_", "MOD_", "VK_", "ICC_", "CW_", "IDC_", "BS_", "ES_", "CBS_", "LBS_", "LB_", "CB_",
+      "BM_", "BN_", "EN_", "CBN_", "LBN_", "LOGFONT", "NONCLIENTMETRICS", "SPI_", "ERROR_", "HWND_", "CHILDID_SELF"]
+  }
+}

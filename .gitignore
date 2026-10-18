@@ -1,0 +1,24 @@
+# Implementation plans are local working notes, never committed
+docs/plans/
+
+# .NET build output
+bin/
+obj/
+publish/
+artifacts/
+
+# IDE / user files
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+*.rsuser
+
+# Test results
+TestResults/
+*.trx
+coverage*/
+
+# Local agent workspaces
+.superpowers/
