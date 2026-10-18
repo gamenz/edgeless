@@ -2,6 +2,7 @@ using Edgeless.Core.Config;
 using Edgeless.Interop;
 using Edgeless.Platform;
 using Edgeless.Shell;
+using Edgeless.Shell.Settings;
 
 namespace Edgeless.App;
 
@@ -100,9 +101,32 @@ internal sealed partial class AppHost
     }
 
     private void OpenSettings()
+        => SettingsWindow.ShowOrActivate(_controller.Config, SaveFromSettings, () => Elevation.OpenWithShell(_store.FilePath));
+
+    /// <summary>Applies a config saved in the settings window. Keeps the old hotkey if the new one is taken.</summary>
+    private SettingsSaveResult SaveFromSettings(AppConfig newConfig)
     {
-        // Replaced by the settings window in a later task; until then open the JSON file.
-        Elevation.OpenWithShell(_store.FilePath);
+        if (!RegisterHotkey(newConfig.Hotkey))
+        {
+            RegisterHotkey(_controller.Config.Hotkey);
+            return new SettingsSaveResult(HotkeyRegistered: false);
+        }
+
+        var autostartChanged = newConfig.Autostart != _controller.Config.Autostart;
+        newConfig.Enabled = _controller.Enabled;
+        _controller.ApplyConfig(newConfig);
+        if (autostartChanged)
+        {
+            SetAutostart(newConfig.Autostart); // also saves
+        }
+        else
+        {
+            SaveConfig();
+        }
+
+        _log.Info("Settings saved");
+        UpdateTooltip();
+        return new SettingsSaveResult(HotkeyRegistered: true);
     }
 
     private bool IsAutostartOn() => _controller.Config.Autostart != AutostartMode.Off;

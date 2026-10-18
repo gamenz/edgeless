@@ -1,0 +1,127 @@
+using Edgeless.Core.Config;
+using Edgeless.Core.Geometry;
+using static Edgeless.Shell.Settings.SettingsLayout;
+
+namespace Edgeless.Shell.Settings;
+
+/// <summary>Keeps the profile list and the detail fields in sync with <see cref="SettingsDraft.Profiles"/>.</summary>
+internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDescriptor> monitors, Func<int, nint> control)
+{
+    private static readonly string[] SizeModeLabels =
+        ["fill — phủ kín màn hình", "center — giữ kích thước, căn giữa", "custom — tuỳ chỉnh"];
+
+    private static readonly int[] DetailControls =
+        [ExeEdit, EnabledCheck, MonitorCombo, SizeModeCombo, CustomX, CustomY, CustomWidth, CustomHeight, PopupCheck, DelayEdit];
+
+    private List<MonitorOption> _monitorOptions = [];
+    private int _selected = -1;
+
+    public void Initialize()
+    {
+        Win32Controls.SetItems(control(SizeModeCombo), isCombo: true, SizeModeLabels);
+        RefreshList(draft.Profiles.Count > 0 ? 0 : -1);
+    }
+
+    public void OnListSelectionChanged()
+    {
+        var index = Win32Controls.GetSelection(control(ProfileList), isCombo: false);
+        if (index != _selected)
+        {
+            Commit();
+            _selected = index;
+            Load();
+        }
+    }
+
+    public void OnSizeModeChanged() => UpdateCustomEnabled();
+
+    public void Add()
+    {
+        Commit();
+        RefreshList(draft.AddProfile());
+    }
+
+    public void Remove()
+    {
+        if (_selected < 0)
+        {
+            return;
+        }
+
+        var next = draft.RemoveAt(_selected);
+        _selected = -1;
+        RefreshList(next);
+    }
+
+    /// <summary>Writes the detail fields back into the selected profile.</summary>
+    public void Commit()
+    {
+        if (_selected < 0 || _selected >= draft.Profiles.Count)
+        {
+            return;
+        }
+
+        var p = draft.Profiles[_selected];
+        p.Exe = Win32Controls.GetText(control(ExeEdit)).Trim();
+        p.Enabled = Win32Controls.GetCheck(control(EnabledCheck));
+        var monitor = Win32Controls.GetSelection(control(MonitorCombo), isCombo: true);
+        p.Monitor = monitor >= 0 && monitor < _monitorOptions.Count ? _monitorOptions[monitor].Value : p.Monitor;
+        p.SizeMode = (SizeMode)Math.Max(0, Win32Controls.GetSelection(control(SizeModeCombo), isCombo: true));
+        p.Custom.X = SettingsDraft.ParseInt(Win32Controls.GetText(control(CustomX)), p.Custom.X);
+        p.Custom.Y = SettingsDraft.ParseInt(Win32Controls.GetText(control(CustomY)), p.Custom.Y);
+        p.Custom.Width = SettingsDraft.ParseInt(Win32Controls.GetText(control(CustomWidth)), p.Custom.Width);
+        p.Custom.Height = SettingsDraft.ParseInt(Win32Controls.GetText(control(CustomHeight)), p.Custom.Height);
+        p.AddPopupStyle = Win32Controls.GetCheck(control(PopupCheck));
+        p.ApplyDelayMs = SettingsDraft.ParseInt(Win32Controls.GetText(control(DelayEdit)), p.ApplyDelayMs);
+
+        // Keep the list text in sync with an edited exe name.
+        var selected = _selected;
+        Win32Controls.SetItems(control(ProfileList), isCombo: false, draft.Profiles.Select(x => x.Exe));
+        Win32Controls.SetSelection(control(ProfileList), isCombo: false, selected);
+    }
+
+    private void RefreshList(int select)
+    {
+        Win32Controls.SetItems(control(ProfileList), isCombo: false, draft.Profiles.Select(p => p.Exe));
+        Win32Controls.SetSelection(control(ProfileList), isCombo: false, select);
+        _selected = select;
+        Load();
+    }
+
+    private void Load()
+    {
+        var hasProfile = _selected >= 0 && _selected < draft.Profiles.Count;
+        foreach (var id in DetailControls)
+        {
+            Win32Controls.Enable(control(id), hasProfile);
+        }
+
+        var p = hasProfile ? draft.Profiles[_selected] : new GameProfile();
+        _monitorOptions = SettingsDraft.MonitorOptions(monitors);
+        var monitorIndex = SettingsDraft.MonitorIndex(_monitorOptions, p.Monitor);
+        Win32Controls.SetItems(control(MonitorCombo), isCombo: true, _monitorOptions.Select(o => o.Label));
+        Win32Controls.SetSelection(control(MonitorCombo), isCombo: true, monitorIndex);
+
+        Win32Controls.SetText(control(ExeEdit), hasProfile ? p.Exe : "");
+        Win32Controls.SetCheck(control(EnabledCheck), p.Enabled);
+        Win32Controls.SetSelection(control(SizeModeCombo), isCombo: true, (int)p.SizeMode);
+        Win32Controls.SetText(control(CustomX), p.Custom.X.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Win32Controls.SetText(control(CustomY), p.Custom.Y.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Win32Controls.SetText(control(CustomWidth), p.Custom.Width.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Win32Controls.SetText(control(CustomHeight), p.Custom.Height.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Win32Controls.SetCheck(control(PopupCheck), p.AddPopupStyle);
+        Win32Controls.SetText(control(DelayEdit), p.ApplyDelayMs.ToString(System.Globalization.CultureInfo.InvariantCulture));
+        Win32Controls.Enable(control(RemoveButton), hasProfile);
+        UpdateCustomEnabled();
+    }
+
+    private void UpdateCustomEnabled()
+    {
+        var isCustom = _selected >= 0
+            && Win32Controls.GetSelection(control(SizeModeCombo), isCombo: true) == (int)SizeMode.Custom;
+        foreach (var id in (int[])[CustomX, CustomY, CustomWidth, CustomHeight])
+        {
+            Win32Controls.Enable(control(id), isCustom);
+        }
+    }
+}

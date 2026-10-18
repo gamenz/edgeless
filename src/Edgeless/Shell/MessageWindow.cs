@@ -26,6 +26,7 @@ internal sealed unsafe class MessageWindow : ITimerScheduler, IDisposable
 
     private static readonly ConcurrentDictionary<nint, MessageWindow> Instances = new();
     private static readonly Lock ClassLock = new();
+    private static readonly HashSet<nint> Dialogs = [];
     private static bool _classRegistered;
 
     private readonly ConcurrentQueue<Action> _posted = new();
@@ -73,9 +74,35 @@ internal sealed unsafe class MessageWindow : ITimerScheduler, IDisposable
     {
         while (PInvoke.GetMessage(out var msg, HWND.Null, 0, 0) > 0)
         {
+            if (IsDialogNavigation(&msg))
+            {
+                continue;
+            }
+
             PInvoke.TranslateMessage(in msg);
             PInvoke.DispatchMessage(in msg);
         }
+    }
+
+    /// <summary>Gives a window dialog-style keyboard navigation (Tab, Enter) in the shared message loop.</summary>
+    public static void RegisterDialog(nint hwnd) => Dialogs.Add(hwnd);
+
+    public static void UnregisterDialog(nint hwnd) => Dialogs.Remove(hwnd);
+
+    /// <summary>For other window procedures: report an exception that must not escape into native code.</summary>
+    public static void ReportHandlerFailure(Exception ex) => HandlerFailed?.Invoke(ex);
+
+    private static bool IsDialogNavigation(MSG* msg)
+    {
+        foreach (var dialog in Dialogs)
+        {
+            if (PInvoke.IsDialogMessage(new HWND(dialog), msg))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /// <summary>Ends <see cref="RunMessageLoop"/>; call on the UI thread.</summary>
