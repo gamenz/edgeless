@@ -1,3 +1,4 @@
+using Edgeless.Core.Config;
 using Edgeless.Interop;
 using Edgeless.Platform;
 using Edgeless.Shell;
@@ -104,7 +105,19 @@ internal sealed partial class AppHost
         Elevation.OpenWithShell(_store.FilePath);
     }
 
-    private bool IsAutostartOn() => false;
+    private bool IsAutostartOn() => _controller.Config.Autostart != AutostartMode.Off;
 
-    private void ToggleAutostart() => _log.Info("Autostart toggle not available yet");
+    /// <summary>Tray toggle: Off ↔ Normal. The elevated mode is chosen in settings.</summary>
+    private void ToggleAutostart() => SetAutostart(IsAutostartOn() ? AutostartMode.Off : AutostartMode.Normal);
+
+    private void SetAutostart(AutostartMode mode)
+    {
+        if (!_autostart.Apply(mode, AppPaths.ExePath))
+        {
+            _log.Warn($"Autostart change to {mode} failed or was cancelled");
+        }
+
+        _controller.Config.Autostart = _autostart.GetCurrent();
+        SaveConfig();
+    }
 }

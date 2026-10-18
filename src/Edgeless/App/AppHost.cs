@@ -21,6 +21,7 @@ internal sealed partial class AppHost : IDisposable
     private readonly BorderlessApplier _applier;
     private readonly HotkeyManager _hotkey;
     private readonly EdgelessController _controller;
+    private readonly Autostart _autostart = new();
     private bool _disposed;
 
     private AppHost()
@@ -85,6 +86,8 @@ internal sealed partial class AppHost : IDisposable
         _window.SessionEnding += OnSessionEnding;
         _registry.Changed += UpdateTooltip;
 
+        _autostart.RepairPath(AppPaths.ExePath);
+        _controller.Config.Autostart = _autostart.GetCurrent();
         RegisterHotkey(_controller.Config.Hotkey);
         _controller.Start();
         UpdateTooltip();

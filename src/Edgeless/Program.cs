@@ -10,6 +10,12 @@ internal static class Program
     {
         var options = CommandLine.Parse(args);
 
+        // Helper invocation (usually elevated via UAC) that only changes the autostart mode, then exits.
+        if (options.SetAutostart is { } mode)
+        {
+            return new Autostart().Apply(mode, AppPaths.ExePath) ? 0 : 1;
+        }
+
         // An elevated restart waits for the old instance to restore its windows and release the mutex.
         using var instance = SingleInstance.TryAcquire(options.ElevatedRestart ? TimeSpan.FromSeconds(10) : TimeSpan.Zero);
         if (instance is null)

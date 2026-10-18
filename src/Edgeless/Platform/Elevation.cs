@@ -27,6 +27,30 @@ internal static class Elevation
         }
     }
 
+    /// <summary>Runs this exe elevated with <paramref name="arguments"/> and waits. Exit code, or -1 if cancelled/failed.</summary>
+    public static int RunElevatedAndWait(string arguments)
+    {
+        try
+        {
+            using var process = Process.Start(new ProcessStartInfo(AppPaths.ExePath, arguments)
+            {
+                UseShellExecute = true,
+                Verb = "runas",
+            });
+            if (process is null)
+            {
+                return -1;
+            }
+
+            process.WaitForExit();
+            return process.ExitCode;
+        }
+        catch (Win32Exception)
+        {
+            return -1;
+        }
+    }
+
     /// <summary>Opens a folder or file with its default handler (Explorer, editor).</summary>
     public static void OpenWithShell(string path)
     {
