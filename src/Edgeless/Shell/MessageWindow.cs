@@ -15,6 +15,7 @@ internal sealed unsafe class MessageWindow : ITimerScheduler, IDisposable
 {
     public const string ClassName = "Edgeless.MessageWindow";
     public const uint WM_TRAY = WM_APP + 1;
+    public const string ShowSettingsMessage = "Edgeless.ShowSettings";
 
     private const uint WM_APP = 0x8000;
     private const uint WM_POST = WM_APP + 2;
@@ -31,7 +32,7 @@ internal sealed unsafe class MessageWindow : ITimerScheduler, IDisposable
     private readonly Dictionary<nuint, (string Key, Action Callback)> _timers = [];
     private readonly Dictionary<string, nuint> _timerIds = new(StringComparer.Ordinal);
     private readonly uint _taskbarCreated = PInvoke.RegisterWindowMessage("TaskbarCreated");
-    private readonly uint _showSettings = PInvoke.RegisterWindowMessage("Edgeless.ShowSettings");
+    private readonly uint _showSettings = PInvoke.RegisterWindowMessage(ShowSettingsMessage);
     private nuint _nextTimerId = 1;
 
     public MessageWindow()
@@ -63,8 +64,8 @@ internal sealed unsafe class MessageWindow : ITimerScheduler, IDisposable
 
     public event Action? SessionEnding;
 
-    /// <summary>Tray icon callback; the argument is the notification message (LOWORD of lParam).</summary>
-    public event Action<uint>? TrayCallback;
+    /// <summary>Tray icon callback (NOTIFYICON_VERSION_4): event = LOWORD(lParam), anchor x/y from wParam.</summary>
+    public event Action<uint, int, int>? TrayCallback;
 
     public nint Handle { get; }
 
@@ -186,7 +187,8 @@ internal sealed unsafe class MessageWindow : ITimerScheduler, IDisposable
                 HotkeyPressed?.Invoke();
                 return true;
             case WM_TRAY:
-                TrayCallback?.Invoke((uint)(lParam.Value & 0xFFFF));
+                TrayCallback?.Invoke(
+                    (uint)(lParam.Value & 0xFFFF), (short)(wParam.Value & 0xFFFF), (short)((wParam.Value >> 16) & 0xFFFF));
                 return true;
             case WM_QUERYENDSESSION:
                 SessionEnding?.Invoke();

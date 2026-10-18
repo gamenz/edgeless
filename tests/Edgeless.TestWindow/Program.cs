@@ -3,7 +3,8 @@ using System.Runtime.InteropServices;
 namespace Edgeless.TestWindow;
 
 /// <summary>
-/// Usage: Edgeless.TestWindow.exe --title T [--mode normal|reset-once|fight] [--delay-ms N] [--maximized]
+/// Usage: Edgeless.TestWindow.exe --title T [--mode normal|reset-once|fight] [--delay-ms N] [--maximized] [--visible]
+/// The window is fully transparent unless --visible is given (automated tests flash many windows).
 /// reset-once: after the first external style change, restore the framed 800x600 window once after delay-ms.
 /// fight: do that after every external style change.
 /// </summary>
@@ -17,7 +18,7 @@ internal static class Program
     }
 }
 
-internal sealed record Options(string Title, string Mode, int DelayMs, bool Maximized)
+internal sealed record Options(string Title, string Mode, int DelayMs, bool Maximized, bool Visible)
 {
     public static Options Parse(string[] args)
     {
@@ -29,7 +30,7 @@ internal sealed record Options(string Title, string Mode, int DelayMs, bool Maxi
 
         return new Options(Value("--title", "Edgeless Test Window"), Value("--mode", "normal"),
             int.Parse(Value("--delay-ms", "200"), System.Globalization.CultureInfo.InvariantCulture),
-            args.Contains("--maximized"));
+            args.Contains("--maximized"), args.Contains("--visible"));
     }
 }
 
@@ -50,6 +51,12 @@ internal sealed class GameForm : Form
     {
         _options = options;
         Text = options.Title;
+        BackColor = Color.Black;
+        DoubleBuffered = true;
+
+        // Layered window with alpha 0: still visible to Win32 (same styles, IsWindowVisible) but nothing is drawn,
+        // so automated runs do not flash full-screen windows.
+        Opacity = options.Visible ? 1.0 : 0.0;
         StartPosition = FormStartPosition.Manual;
         Location = new Point(100, 100);
         Size = new Size(800, 600);

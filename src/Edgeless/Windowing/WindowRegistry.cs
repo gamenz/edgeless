@@ -6,13 +6,29 @@ internal sealed class WindowRegistry
     private readonly Dictionary<nint, ManagedWindow> _windows = [];
     private readonly HashSet<(nint Hwnd, uint Pid)> _userDisabled = [];
 
+    /// <summary>Raised when a window starts or stops being managed.</summary>
+    public event Action? Changed;
+
     public IReadOnlyCollection<ManagedWindow> All => _windows.Values;
 
     public bool TryGet(nint hwnd, out ManagedWindow window) => _windows.TryGetValue(hwnd, out window!);
 
-    public void Add(ManagedWindow window) => _windows[window.Hwnd] = window;
+    public void Add(ManagedWindow window)
+    {
+        _windows[window.Hwnd] = window;
+        Changed?.Invoke();
+    }
 
-    public bool Remove(nint hwnd) => _windows.Remove(hwnd);
+    public bool Remove(nint hwnd)
+    {
+        var removed = _windows.Remove(hwnd);
+        if (removed)
+        {
+            Changed?.Invoke();
+        }
+
+        return removed;
+    }
 
     public bool HasPid(uint pid) => _windows.Values.Any(w => w.Pid == pid);
 
@@ -27,7 +43,7 @@ internal sealed class WindowRegistry
     {
         foreach (var hwnd in _windows.Values.Where(w => w.Pid == pid).Select(w => w.Hwnd).ToList())
         {
-            _windows.Remove(hwnd);
+            Remove(hwnd);
         }
 
         _userDisabled.RemoveWhere(e => e.Pid == pid);

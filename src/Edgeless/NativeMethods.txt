@@ -47,3 +47,13 @@ KillTimer
 RegisterHotKey
 UnregisterHotKey
 GetModuleHandle
+// Own-window only (tray icon and menu).
+Shell_NotifyIcon
+CreatePopupMenu
+AppendMenu
+TrackPopupMenu
+DestroyMenu
+SetForegroundWindow
+FindWindow
+LoadImage
+NOTIFYICON_VERSION_4
