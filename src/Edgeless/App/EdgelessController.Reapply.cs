@@ -22,7 +22,7 @@ internal sealed partial class EdgelessController
         }
 
         LastForeground = info;
-        var profile = Enabled ? FindProfile(info.ExeName) : null;
+        var profile = Enabled ? FindProfile(info.ImagePath) : null;
         if (profile is null || registry.IsUserDisabled(hwnd, info.Pid))
         {
             return;
@@ -65,7 +65,7 @@ internal sealed partial class EdgelessController
     {
         if (Enabled && registry.TryGet(hwnd, out var window))
         {
-            ApplyNow(new WindowInfo(hwnd, window.Pid, window.ExeName, ""), window.Profile, isReapply: true);
+            ApplyNow(new WindowInfo(hwnd, window.Pid, window.ImagePath, ""), window.Profile, isReapply: true);
         }
     }
 
@@ -115,7 +115,7 @@ internal sealed partial class EdgelessController
                 watcher.WatchProcess(window.Pid);
                 break;
             case ApplyResult.AccessDenied:
-                notifier.Notify("uipi:" + window.ExeName, Title,
+                notifier.Notify("uipi:" + window.ImagePath, Title,
                     $"Game {window.ExeName} chạy với quyền admin. Hãy chạy Edgeless bằng quyền admin "
                     + "(tray → Khởi động lại với quyền admin).");
                 break;
@@ -126,7 +126,7 @@ internal sealed partial class EdgelessController
     {
         log.Warn($"Guard tripped: {window.ExeName} pid={window.Pid} hwnd=0x{window.Hwnd:X} keeps resetting its window");
         RestoreManaged(window.Hwnd, markUserDisabled: true);
-        notifier.Notify("guard:" + window.ExeName, Title,
+        notifier.Notify("guard:" + window.ImagePath, Title,
             $"Game {window.ExeName} liên tục reset cửa sổ, Edgeless đã dừng cho cửa sổ này.");
     }
 }

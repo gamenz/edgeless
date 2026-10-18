@@ -1,4 +1,5 @@
 using Edgeless.Core.Config;
+using Edgeless.Core.Rules;
 using Edgeless.Interop;
 using Edgeless.Platform;
 using Edgeless.Shell;
@@ -34,7 +35,7 @@ internal sealed partial class AppHost
         return new TrayMenuState(
             _controller.Enabled,
             last?.ExeName,
-            last is not null && _controller.Config.Profiles.Any(p => p.Exe == last.ExeName),
+            last is not null && _controller.Config.Profiles.Any(p => ExePath.AreSame(p.Path, last.ImagePath)),
             managed,
             AutostartOn: IsAutostartOn(),
             Elevation.IsElevated);

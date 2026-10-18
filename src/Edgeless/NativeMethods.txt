@@ -72,3 +72,4 @@ LoadCursor
 IDC_ARROW
 // Own-window only (startup error dialog).
 MessageBox
+GetOpenFileName

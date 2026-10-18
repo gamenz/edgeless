@@ -85,21 +85,21 @@ internal sealed partial class EdgelessController(
 
         registry.ClearUserDisabled(hwnd);
         guard.Reset(hwnd);
-        ApplyNow(info, FindProfile(info.ExeName) ?? new GameProfile(), isReapply: false);
+        ApplyNow(info, FindProfile(info.ImagePath) ?? new GameProfile(), isReapply: false);
     }
 
     /// <summary>Adds the last foreground window's exe with a default profile and applies it. Null if none or listed.</summary>
     public GameProfile? AddLastForegroundToProfiles()
     {
         var last = LastForeground;
-        if (last is null || _config.Profiles.Any(p => p.Exe == last.ExeName))
+        if (last is null || last.ImagePath.Length == 0 || _config.Profiles.Any(p => ExePath.AreSame(p.Path, last.ImagePath)))
         {
             return null;
         }
 
-        var profile = GameProfile.CreateDefault(last.ExeName);
+        var profile = GameProfile.CreateDefault(last.ImagePath);
         _config.Profiles.Add(profile);
-        log.Info($"Added profile: {profile.Exe}");
+        log.Info($"Added profile: {profile.Path}");
         if (Enabled && ForeignWindow.IsWindow(last.Hwnd))
         {
             ApplyNow(MainWindowOf(last), profile, isReapply: false);
@@ -124,14 +124,14 @@ internal sealed partial class EdgelessController(
 
         foreach (var window in registry.All.ToList())
         {
-            var profile = FindProfile(window.ExeName);
+            var profile = FindProfile(window.ImagePath);
             if (profile is null)
             {
                 RestoreManaged(window.Hwnd, markUserDisabled: false);
                 continue;
             }
 
-            ApplyNow(new WindowInfo(window.Hwnd, window.Pid, window.ExeName, ""), profile, isReapply: false);
+            ApplyNow(new WindowInfo(window.Hwnd, window.Pid, window.ImagePath, ""), profile, isReapply: false);
         }
 
         if (Enabled)
@@ -148,13 +148,14 @@ internal sealed partial class EdgelessController(
         watcher.Dispose();
     }
 
-    private GameProfile? FindProfile(string exe) => _config.Profiles.FirstOrDefault(p => p.Enabled && p.Exe == exe);
+    private GameProfile? FindProfile(string imagePath)
+        => _config.Profiles.FirstOrDefault(p => p.Enabled && ExePath.AreSame(p.Path, imagePath));
 
     private void ScanRunning()
     {
         foreach (var window in finder.FindProfileWindows(_config.Profiles.Where(p => p.Enabled)))
         {
-            var profile = FindProfile(window.ExeName);
+            var profile = FindProfile(window.ImagePath);
             if (profile is not null && !registry.IsUserDisabled(window.Hwnd, window.Pid))
             {
                 ApplyNow(window, profile, isReapply: false);

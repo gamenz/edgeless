@@ -166,7 +166,7 @@ internal sealed unsafe class SettingsWindow
                 _editor.OnSizeModeChanged();
                 break;
             case AddButton when code == Win32Controls.BN_CLICKED:
-                _editor.Add();
+                _editor.Add(_hwnd);
                 break;
             case RemoveButton when code == Win32Controls.BN_CLICKED:
                 _editor.Remove();

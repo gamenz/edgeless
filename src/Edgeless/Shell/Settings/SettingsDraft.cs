@@ -1,6 +1,7 @@
 using System.Globalization;
 using Edgeless.Core.Config;
 using Edgeless.Core.Geometry;
+using Edgeless.Core.Rules;
 
 namespace Edgeless.Shell.Settings;
 
@@ -35,18 +36,45 @@ internal sealed class SettingsDraft
         set => _copy.Autostart = value;
     }
 
-    /// <summary>Adds a placeholder profile with a unique exe name; returns its index.</summary>
-    public int AddProfile()
+    /// <summary>
+    /// Adds a profile for <paramref name="path"/>. Returns its index, the existing index when that path is already
+    /// listed, or -1 when the path is not a valid full path.
+    /// </summary>
+    public int AddProfile(string path)
     {
-        var name = "game.exe";
-        for (var n = 2; Profiles.Any(p => p.Exe == name); n++)
+        var normalized = ExePath.Normalize(path);
+        if (normalized.Length == 0)
         {
-            name = $"game{n}.exe";
+            return -1;
         }
 
-        Profiles.Add(GameProfile.CreateDefault(name));
+        var existing = Profiles.FindIndex(p => ExePath.AreSame(p.Path, normalized));
+        if (existing >= 0)
+        {
+            return existing;
+        }
+
+        Profiles.Add(GameProfile.CreateDefault(normalized));
         return Profiles.Count - 1;
     }
+
+    /// <summary>Points a profile at another exe. False (nothing changed) when invalid or used by another profile.</summary>
+    public bool ReplacePath(int index, string path)
+    {
+        var normalized = ExePath.Normalize(path);
+        var clash = Profiles.Where((p, i) => i != index && ExePath.AreSame(p.Path, normalized)).Any();
+        if (normalized.Length == 0 || clash)
+        {
+            return false;
+        }
+
+        Profiles[index].Path = normalized;
+        return true;
+    }
+
+    /// <summary>List text: "file.exe — folder".</summary>
+    public static string ListLabel(GameProfile profile)
+        => $"{profile.ExeName} — {System.IO.Path.GetDirectoryName(profile.Path)}";
 
     /// <summary>Removes a profile; returns the index to select next, or -1 when the list is empty.</summary>
     public int RemoveAt(int index)

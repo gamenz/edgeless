@@ -15,10 +15,4 @@ public static class ExeNameMatcher
 
         return name.EndsWith(".exe", StringComparison.Ordinal) ? name : name + ".exe";
     }
-
-    public static bool Matches(string profileExe, string processImagePath)
-    {
-        var expected = Normalize(profileExe);
-        return expected.Length > 0 && expected == Normalize(processImagePath);
-    }
 }

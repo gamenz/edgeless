@@ -1,4 +1,5 @@
 using Edgeless.Core.Config;
+using Edgeless.Core.Rules;
 using Edgeless.Core.Styles;
 using Edgeless.Interop;
 
@@ -11,7 +12,10 @@ internal sealed class ManagedWindow
 
     public required uint Pid { get; init; }
 
-    public required string ExeName { get; init; }
+    /// <summary>Normalized full path of the game exe.</summary>
+    public required string ImagePath { get; init; }
+
+    public string ExeName => ExePath.FileName(ImagePath);
 
     public required WindowStyles OriginalStyles { get; init; }
 

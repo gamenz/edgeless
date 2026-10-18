@@ -17,7 +17,7 @@ public static class ConfigSerializer
         => JsonSerializer.Serialize(config, ConfigJsonContext.Default.AppConfig).ReplaceLineEndings("\n");
 
     /// <summary>
-    /// Repairs hand-edited junk in place: drops blank and duplicate exes (first wins), clamps delays,
+    /// Repairs hand-edited junk in place: drops blank, relative and duplicate paths (first wins), clamps delays,
     /// restores defaults for blank monitor, invalid custom size and missing objects.
     /// </summary>
     public static AppConfig Normalize(AppConfig config)
@@ -27,7 +27,7 @@ public static class ConfigSerializer
         config.Hotkey.Modifiers ??= [];
         config.Hotkey.Key ??= "";
 
-        var seen = new HashSet<string>(StringComparer.Ordinal);
+        var seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         var profiles = new List<GameProfile>();
         foreach (var profile in config.Profiles ?? [])
         {
@@ -36,8 +36,8 @@ public static class ConfigSerializer
                 continue;
             }
 
-            profile.Exe = ExeNameMatcher.Normalize(profile.Exe ?? "");
-            if (profile.Exe.Length == 0 || !seen.Add(profile.Exe))
+            profile.Path = ExePath.Normalize(profile.Path ?? "");
+            if (profile.Path.Length == 0 || !seen.Add(profile.Path))
             {
                 continue;
             }

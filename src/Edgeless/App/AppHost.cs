@@ -40,7 +40,7 @@ internal sealed partial class AppHost : IDisposable
         _notifier = new Notifier(_tray, new NotificationThrottle(TimeProvider.System), _log);
         _applier = new BorderlessApplier(_registry, _log);
         _hotkey = new HotkeyManager(_window.Handle);
-        var finder = new WindowFinder(new ProcessNameCache(), (uint)Environment.ProcessId);
+        var finder = new WindowFinder(new ProcessPathCache(), (uint)Environment.ProcessId);
         _controller = new EdgelessController(load.Config, finder, _applier, _registry, new WinEventWatcher(), _window,
             _notifier, new ReapplyGuard(TimeProvider.System), _log);
 

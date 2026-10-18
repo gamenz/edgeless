@@ -28,7 +28,7 @@ public sealed class EdgelessControllerHotkeyTests
     public void Hotkey_Off_BlocksAutoApplyUntilPressedAgain()
     {
         using var window = TestWindowProcess.Start();
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
         Assert.True(IsBorderless(window.Hwnd));
 
         host.Invoke(() => host.Controller.OnHotkey(window.Hwnd));
@@ -63,7 +63,7 @@ public sealed class EdgelessControllerHotkeyTests
 
         var added = host.Invoke(host.Controller.AddLastForegroundToProfiles);
 
-        Assert.Equal(TestWindowProcess.ExeName, added?.Exe);
+        Assert.Equal(TestWindowProcess.ExePath, added?.Path, StringComparer.OrdinalIgnoreCase);
         Assert.True(IsBorderless(window.Hwnd));
         Assert.Null(host.Invoke(host.Controller.AddLastForegroundToProfiles));
     }

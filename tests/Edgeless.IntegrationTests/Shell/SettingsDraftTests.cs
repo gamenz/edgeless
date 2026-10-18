@@ -10,7 +10,10 @@ public sealed class SettingsDraftTests
     {
         Enabled = false,
         Autostart = AutostartMode.Normal,
-        Profiles = [new GameProfile { Exe = "a.exe", SizeMode = SizeMode.Center, Monitor = @"\\.\DISPLAY2" }],
+        Profiles =
+        [
+            new GameProfile { Path = @"D:\Games\A\a.exe", SizeMode = SizeMode.Center, Monitor = @"\\.\DISPLAY2" },
+        ],
     };
 
     [Fact]
@@ -19,11 +22,11 @@ public sealed class SettingsDraftTests
         var original = Sample();
         var draft = new SettingsDraft(original);
 
-        draft.Profiles[0].Exe = "changed.exe";
+        draft.Profiles[0].Path = @"D:\Games\Changed\changed.exe";
         draft.Profiles[0].Custom.Width = 1;
         draft.Hotkey.Key = "Z";
 
-        Assert.Equal("a.exe", original.Profiles[0].Exe);
+        Assert.Equal(@"D:\Games\A\a.exe", original.Profiles[0].Path);
         Assert.Equal(1920, original.Profiles[0].Custom.Width);
         Assert.Equal("B", original.Hotkey.Key);
     }
@@ -32,24 +35,74 @@ public sealed class SettingsDraftTests
     public void ToConfig_NormalizesAndKeepsNonEditedFields()
     {
         var draft = new SettingsDraft(Sample());
-        draft.AddProfile();
-        draft.Profiles[^1].Exe = "New Game";
+        draft.AddProfile("d:/games/b/New Game.exe");
 
         var config = draft.ToConfig();
 
         Assert.False(config.Enabled);
         Assert.Equal(AutostartMode.Normal, config.Autostart);
-        Assert.Equal(["a.exe", "new game.exe"], config.Profiles.Select(p => p.Exe));
+        Assert.Equal([@"D:\Games\A\a.exe", @"d:\games\b\New Game.exe"], config.Profiles.Select(p => p.Path));
     }
 
     [Fact]
-    public void AddProfile_SelectsUniquePlaceholder_RemoveAtClampsSelection()
+    public void AddProfile_NewPath_AppendsNormalized()
     {
         var draft = new SettingsDraft(new AppConfig());
 
-        Assert.Equal(0, draft.AddProfile());
-        Assert.Equal(1, draft.AddProfile());
-        Assert.Equal(["game.exe", "game2.exe"], draft.Profiles.Select(p => p.Exe));
+        Assert.Equal(0, draft.AddProfile("D:/Games/A/game.exe"));
+        Assert.Equal(@"D:\Games\A\game.exe", draft.Profiles[0].Path);
+    }
+
+    [Fact]
+    public void AddProfile_ExistingPath_ReturnsExistingIndex()
+    {
+        var draft = new SettingsDraft(new AppConfig());
+
+        Assert.Equal(0, draft.AddProfile(@"D:\Games\A\game.exe"));
+        Assert.Equal(1, draft.AddProfile(@"D:\Games\B\game.exe")); // same name, other folder: a separate game
+        Assert.Equal(0, draft.AddProfile("d:/games/a/GAME.exe"));
+        Assert.Equal(2, draft.Profiles.Count);
+    }
+
+    [Fact]
+    public void AddProfile_InvalidPath_ReturnsMinusOne()
+    {
+        var draft = new SettingsDraft(new AppConfig());
+
+        Assert.Equal(-1, draft.AddProfile("game.exe"));
+        Assert.Empty(draft.Profiles);
+    }
+
+    [Fact]
+    public void ReplacePath_ChangesPath()
+    {
+        var draft = new SettingsDraft(Sample());
+
+        Assert.True(draft.ReplacePath(0, "E:/Moved/a.exe"));
+        Assert.Equal(@"E:\Moved\a.exe", draft.Profiles[0].Path);
+    }
+
+    [Fact]
+    public void ReplacePath_DuplicateOfOther_IsRejected()
+    {
+        var draft = new SettingsDraft(Sample());
+        draft.AddProfile(@"D:\Games\B\b.exe");
+
+        Assert.False(draft.ReplacePath(1, @"d:\games\a\A.EXE"));
+        Assert.False(draft.ReplacePath(1, "relative.exe"));
+        Assert.Equal(@"D:\Games\B\b.exe", draft.Profiles[1].Path);
+    }
+
+    [Fact]
+    public void ListLabel_ShowsNameAndFolder()
+        => Assert.Equal(@"game.exe — D:\Games\A", SettingsDraft.ListLabel(new GameProfile { Path = @"D:\Games\A\Game.exe" }));
+
+    [Fact]
+    public void RemoveAt_ClampsSelection()
+    {
+        var draft = new SettingsDraft(new AppConfig());
+        draft.AddProfile(@"C:\a.exe");
+        draft.AddProfile(@"C:\b.exe");
 
         Assert.Equal(0, draft.RemoveAt(1));
         Assert.Equal(-1, draft.RemoveAt(0));

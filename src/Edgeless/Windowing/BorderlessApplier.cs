@@ -70,7 +70,7 @@ internal sealed class BorderlessApplier(WindowRegistry registry, ILog log)
         {
             registry.Add(new ManagedWindow
             {
-                Hwnd = hwnd, Pid = window.Pid, ExeName = window.ExeName,
+                Hwnd = hwnd, Pid = window.Pid, ImagePath = window.ImagePath,
                 OriginalStyles = originalStyles, OriginalPlacement = originalPlacement, Profile = profile,
             });
         }

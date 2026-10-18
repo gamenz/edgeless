@@ -5,7 +5,8 @@ namespace Edgeless.IntegrationTests.Support;
 /// <summary>Starts Edgeless.TestWindow.exe and waits for its main window.</summary>
 public sealed class TestWindowProcess : IDisposable
 {
-    public const string ExeName = "edgeless.testwindow.exe";
+    /// <summary>Full path of the fake game exe; profiles match it by path.</summary>
+    public static readonly string ExePath = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "Edgeless.TestWindow.exe"));
 
     private readonly Process _process;
 
@@ -23,7 +24,7 @@ public sealed class TestWindowProcess : IDisposable
 
     public static TestWindowProcess Start(string mode = "normal", int delayMs = 200, bool maximized = false)
     {
-        var exe = Path.Combine(AppContext.BaseDirectory, "Edgeless.TestWindow.exe");
+        var exe = ExePath;
         var args = $"--title \"Edgeless Test {Guid.NewGuid():N}\" --mode {mode} --delay-ms {delayMs}"
             + (maximized ? " --maximized" : "");
         var process = Process.Start(new ProcessStartInfo(exe, args) { UseShellExecute = false })

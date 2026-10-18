@@ -40,7 +40,8 @@ the Windowed window of games the user picks into a full-screen **Borderless Wind
 ## 3. Constraints
 
 - **Anti-cheat**: all of [CLAUDE.md §1](../../CLAUDE.md). Every Win32 call aimed at a game's HWND/PID must be in
-  the §1.2 whitelist and live in `src/Edgeless/Interop/`.
+  the §1.2 whitelist and live in `src/Edgeless/Interop/`. Path-based matching needs no new foreign API (the full path
+  already comes from `QueryFullProcessImageName`); the file dialog is an own-window API.
 - **Technology**: .NET 10, C#, Native AOT, single file. No WinForms/WPF; the UI is plain Win32.
   P/Invoke via CsWin32. JSON via System.Text.Json source generation.
 - **Privileges**: runs without admin. Admin is only needed when a game runs as admin or when the user enables
@@ -52,10 +53,15 @@ the Windowed window of games the user picks into a full-screen **Borderless Wind
 
 ### 4.1 Identifying games and choosing the window
 
-- A **profile** is bound to an exe name (e.g. `eldenring.exe`). Matching is case-insensitive; the user may omit
-  `.exe`.
-- The exe name comes from `OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)` + `QueryFullProcessImageName`, cached by
-  PID (cleared when the process exits). If the handle cannot be opened → skip the window, log Warn, try nothing else.
+- A **profile** is bound to the **full path** of a game exe (e.g. `D:\Games\Elden Ring\Game\eldenring.exe`), because
+  different games can share an exe name (`game.exe`, `launcher.exe`). Matching compares normalized full paths
+  (`Path.GetFullPath`, forward slashes → backslashes, trailing whitespace trimmed), case-insensitive. There is no
+  name-only matching. The exe file name is derived from the path for display only.
+- The process path comes from `OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION)` + `QueryFullProcessImageName` (Win32
+  path format), cached briefly per PID (PIDs are reused). If the handle cannot be opened → skip the window, log Warn,
+  try nothing else.
+- Caveat (shown in the README): if the user picks a launcher exe but the game runs as a different exe, the profile
+  never matches; adding the game from the tray while it is focused always records the exe that actually runs.
 - **Eligible windows** of a process: top-level (`GetAncestor(GA_ROOT) == hwnd`), no owner
   (`GetWindow(GW_OWNER) == 0`), visible, not cloaked (`DWMWA_CLOAKED`), no `WS_CHILD`, no `WS_EX_TOOLWINDOW`.
   Among them, pick the one with the largest window-rect area.
@@ -108,7 +114,7 @@ they already match, call no API at all. This is the main guard against loops cau
 **Global hook (one, for the app's lifetime):** `SetWinEventHook(EVENT_SYSTEM_FOREGROUND,
 EVENT_SYSTEM_FOREGROUND, WINEVENT_OUTOFCONTEXT | WINEVENT_SKIPOWNPROCESS)`.
 - On every foreground change: remember the "last foreground window not owned by Edgeless/the shell" (used by
-  "Add to list"); resolve the exe name → if it matches an enabled profile → schedule an apply after `applyDelayMs`
+  "Add to list"); resolve the process path → if it matches an enabled profile → schedule an apply after `applyDelayMs`
   (default 500 ms, one-shot timer). Many games reposition their window right after startup.
 
 **Startup scan:** one `EnumWindows` pass to apply to listed games that are already running.
@@ -138,7 +144,7 @@ No repeating timers, no polling. No WMI or process-start watching.
 - Pressing the hotkey on the foreground window (unless excluded):
   - managed → restore it (§4.3) and mark it "disabled by the user" for this hwnd, so automation does not re-apply it
     until the game restarts or the hotkey is pressed again;
-  - not managed → apply using that exe's profile if one exists, otherwise the default profile
+  - not managed → apply using the profile for that process path if one exists, otherwise the default profile
     (`current` + `fill`). The hotkey does **not** add the game to the list.
 - Registration failure (taken by another app) → notify; settings show a warning next to the hotkey field.
 - When globally disabled, the hotkey does nothing.
@@ -156,8 +162,9 @@ Tray icon via `Shell_NotifyIcon`. Tooltip: `Edgeless — Đang bật (n cửa s�
 `Edgeless — Đang tắt` ("disabled"). Double-click opens settings. Right-click menu (UI copy is Vietnamese):
 
 - ☑ **Bật Edgeless** — enable Edgeless
-- **Thêm "<exe>" vào danh sách** — add the last foreground window's exe (§4.4); disabled when there is none. Adds it
-  with the default profile and applies immediately.
+- **Thêm "<exe>" vào danh sách** — add the last foreground window's process (§4.4) by its full path; the label shows
+  the file name. Disabled when there is none or that path is already listed. Adds it with the default profile and
+  applies immediately.
 - **Đang áp dụng ▸** — submenu of managed windows (exe + title); clicking one restores that window.
 - **Cài đặt…** — settings
 - ☑ **Khởi động cùng Windows** — start with Windows
@@ -169,8 +176,11 @@ Tray icon via `Shell_NotifyIcon`. Tooltip: `Edgeless — Đang bật (n cửa s�
 
 One simple, fixed-size, DPI-scaled window:
 
-- Profile list (listbox) + **Thêm** (add) / **Xoá** (remove) buttons.
-- Details of the selected profile: exe name, ☑ enabled; monitor (combobox: "Màn hình hiện tại" / current monitor +
+- Profile list (listbox, one line per profile: `<file name> — <folder>`) + **Thêm…** (add) / **Xoá** (remove)
+  buttons. **Thêm…** opens the standard Open File dialog (`GetOpenFileNameW`, filter `*.exe`, must exist); choosing a
+  path that is already listed just selects that profile; cancelling changes nothing.
+- Details of the selected profile: full path (read-only edit) + **Đổi…** button (same dialog, replaces the path),
+  ☑ enabled; monitor (combobox: "Màn hình hiện tại" / current monitor +
   each monitor as `\\.\DISPLAYn — 2560×1440`); size mode (`fill` / `center` / `custom` + four x, y, w, h fields
   enabled only for custom); ☑ add `WS_POPUP`; apply delay (ms).
 - General: hotkey (common control `msctls_hotkey32`), start with Windows (Off / Normal / As administrator).
@@ -210,7 +220,7 @@ not writable (e.g. under `Program Files`), show an error dialog asking the user 
   "autostart": "normal",
   "profiles": [
     {
-      "exe": "eldenring.exe",
+      "path": "D:\\Games\\Elden Ring\\Game\\eldenring.exe",
       "enabled": true,
       "monitor": "current",
       "sizeMode": "fill",
@@ -224,6 +234,8 @@ not writable (e.g. under `Program Files`), show an error dialog asking the user 
 
 - `autostart`: `off` | `normal` | `elevated`. `monitor`: `current` or a device name.
   `sizeMode`: `fill` | `center` | `custom`.
+- `path`: full path of the game exe; profiles with a blank or relative path are dropped on load, duplicates (same
+  normalized path) keep the first. There is no `exe` field (no released version used it, so no migration).
 - Missing file → create defaults. Missing fields → use defaults.
 - Malformed JSON → rename to `config.invalid-<yyyyMMdd-HHmmss>.json`, run with defaults, notify the user.
 - Safe writes: write a temp file, then rename (never a half-written file).
@@ -259,7 +271,7 @@ not writable (e.g. under `Program Files`), show an error dialog asking the user 
 ## 5. Testing
 
 - **`Edgeless.Core.Tests`** (xUnit): style/ex-style computation, target rect (fill/center/custom, negative
-  coordinates, missing monitor), exe matching, exclusion list, guard/debounce (fake clock), config read/write
+  coordinates, missing monitor), path normalization/matching, exclusion list, guard/debounce (fake clock), config read/write
   (missing fields, malformed JSON).
 - **`Edgeless.TestWindow`**: a "fake game" Win32 window with modes: normal; resets its style after N ms; keeps
   resizing (to exercise the guard); destroys and recreates its window; runs as administrator.
@@ -292,6 +304,9 @@ not writable (e.g. under `Program Files`), show an error dialog asking the user 
 - Autostart has 3 modes; the elevated mode uses Task Scheduler.
 - Portable layout (changed on 2026-10-18 at the user's request): `config.json` and `logs\` live next to the exe; a
   non-writable exe folder is a startup error, with no fallback to `%APPDATA%`.
+- Profiles match by full exe path, not exe name (changed on 2026-10-18 at the user's request: names can collide).
+  Games are added with an Open File dialog (`GetOpenFileNameW`, own window only — allowlisted with the user's approval)
+  or from the tray while focused.
 - No UWP/Game Pass support, no managing several windows of one process at once.
 
 ## 8. Left to the builder

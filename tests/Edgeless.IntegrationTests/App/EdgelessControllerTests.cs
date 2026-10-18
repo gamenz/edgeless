@@ -8,8 +8,12 @@ namespace Edgeless.IntegrationTests.App;
 [Trait("Category", "Integration")]
 public sealed class EdgelessControllerTests
 {
-    internal static AppConfig ConfigFor(string exe, int delayMs = 100)
-        => new() { Profiles = [new GameProfile { Exe = exe, ApplyDelayMs = delayMs }] };
+    internal static AppConfig ConfigFor(string path, int delayMs = 100)
+    {
+        var profile = GameProfile.CreateDefault(path);
+        profile.ApplyDelayMs = delayMs;
+        return new AppConfig { Profiles = [profile] };
+    }
 
     internal static bool IsBorderless(nint hwnd) => StyleCalculator.IsBorderless(ForeignWindow.GetStyles(hwnd), false);
 
@@ -18,7 +22,7 @@ public sealed class EdgelessControllerTests
     {
         using var window = TestWindowProcess.Start();
         // Not started: no start-up scan, so only the (simulated) foreground event can apply.
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName, delayMs: 300), start: false);
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath, delayMs: 300), start: false);
 
         host.Invoke(() => host.Controller.OnForeground(window.Hwnd));
 
@@ -31,7 +35,7 @@ public sealed class EdgelessControllerTests
     public void Start_ScansRunningGames()
     {
         using var window = TestWindowProcess.Start();
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
 
         Assert.True(IsBorderless(window.Hwnd));
         Assert.Equal(1, host.Invoke(() => host.Registry.All.Count));
@@ -41,20 +45,23 @@ public sealed class EdgelessControllerTests
     public void Foreground_UnlistedWindow_NotTouched()
     {
         using var window = TestWindowProcess.Start();
-        using var host = new MessageLoopHost(ConfigFor("some-other-game.exe"));
+        // Same file name, different folder: must not match.
+        using var host = new MessageLoopHost(ConfigFor(@"C:\Games\Other\Edgeless.TestWindow.exe"));
 
         host.Invoke(() => host.Controller.OnForeground(window.Hwnd));
         Thread.Sleep(400);
 
         Assert.False(IsBorderless(window.Hwnd));
-        Assert.Equal(TestWindowProcess.ExeName, host.Invoke(() => host.Controller.LastForeground?.ExeName));
+        Assert.Equal("edgeless.testwindow.exe", host.Invoke(() => host.Controller.LastForeground?.ExeName));
+        Assert.Equal(TestWindowProcess.ExePath, host.Invoke(() => host.Controller.LastForeground?.ImagePath),
+            StringComparer.OrdinalIgnoreCase);
     }
 
     [Fact]
     public void GameResetsStyle_IsReappliedWithin1Second()
     {
         using var window = TestWindowProcess.Start(mode: "reset-once", delayMs: 300);
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
         Assert.True(IsBorderless(window.Hwnd));
 
         Assert.True(TestUser32.WaitUntil(() => host.Log.Count("Applied:") >= 2, TimeSpan.FromSeconds(1.5)));
@@ -66,10 +73,11 @@ public sealed class EdgelessControllerTests
     public void GameFights_GuardTripsAndRestores()
     {
         using var window = TestWindowProcess.Start(mode: "fight", delayMs: 50);
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
 
         Assert.True(TestUser32.WaitUntil(
-            () => host.Notifier.Keys.Contains("guard:" + TestWindowProcess.ExeName), TimeSpan.FromSeconds(15)));
+            () => host.Notifier.Keys.Contains("guard:" + TestWindowProcess.ExePath, StringComparer.OrdinalIgnoreCase),
+            TimeSpan.FromSeconds(15)));
         Assert.Equal(0, host.Invoke(() => host.Registry.All.Count));
         var applies = host.Log.Count("Applied:");
         Thread.Sleep(2000);
@@ -84,7 +92,7 @@ public sealed class EdgelessControllerTests
         TestUser32.ShowWindow(window.Hwnd, TestUser32.SW_MINIMIZE);
         Assert.True(TestUser32.WaitUntil(() => ForeignWindow.IsMinimized(window.Hwnd), TimeSpan.FromSeconds(2)));
 
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName)); // start-up scan meets a minimized game
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath)); // start-up scan meets a minimized game
         Thread.Sleep(400);
         Assert.False(IsBorderless(window.Hwnd));
         Assert.Equal(0, host.Invoke(() => host.Registry.All.Count));
@@ -97,7 +105,7 @@ public sealed class EdgelessControllerTests
     public void SetEnabledFalse_RestoresAll()
     {
         using var window = TestWindowProcess.Start();
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
         Assert.True(IsBorderless(window.Hwnd));
 
         host.Invoke(() => host.Controller.SetEnabled(false));
@@ -112,7 +120,7 @@ public sealed class EdgelessControllerTests
     public void Dispose_RestoresAll()
     {
         using var window = TestWindowProcess.Start();
-        var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
         Assert.True(IsBorderless(window.Hwnd));
 
         host.Dispose();
@@ -124,7 +132,7 @@ public sealed class EdgelessControllerTests
     public void WindowDestroyed_CleansRegistry()
     {
         using var window = TestWindowProcess.Start();
-        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExeName));
+        using var host = new MessageLoopHost(ConfigFor(TestWindowProcess.ExePath));
         Assert.Equal(1, host.Invoke(() => host.Registry.All.Count));
 
         window.Kill();

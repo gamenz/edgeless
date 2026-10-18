@@ -44,22 +44,22 @@ public sealed class ConfigStoreTests : IDisposable
     public void Load_ReturnsNormalizedConfig()
     {
         var store = new ConfigStore(_dir.Path, _time);
-        File.WriteAllText(store.FilePath, """{"profiles":[{"exe":"Game"},{"exe":""}]}""");
+        File.WriteAllText(store.FilePath, """{"profiles":[{"path":"D:/Games/Game.exe"},{"path":"game.exe"}]}""");
 
-        Assert.Equal("game.exe", Assert.Single(store.Load().Config.Profiles).Exe);
+        Assert.Equal(@"D:\Games\Game.exe", Assert.Single(store.Load().Config.Profiles).Path);
     }
 
     [Fact]
     public void Save_ThenLoad_RoundTrips()
     {
         var store = new ConfigStore(_dir.Path, _time);
-        var config = new AppConfig { Enabled = false, Profiles = [GameProfile.CreateDefault("a.exe")] };
+        var config = new AppConfig { Enabled = false, Profiles = [GameProfile.CreateDefault(@"C:\Games\a.exe")] };
 
         store.Save(config);
         var loaded = store.Load().Config;
 
         Assert.False(loaded.Enabled);
-        Assert.Equal("a.exe", Assert.Single(loaded.Profiles).Exe);
+        Assert.Equal(@"C:\Games\a.exe", Assert.Single(loaded.Profiles).Path);
     }
 
     [Fact]

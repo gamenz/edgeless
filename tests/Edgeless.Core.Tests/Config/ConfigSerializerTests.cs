@@ -13,7 +13,7 @@ public sealed class ConfigSerializerTests
           "autostart": "normal",
           "profiles": [
             {
-              "exe": "eldenring.exe",
+              "path": "D:\\Games\\Elden Ring\\Game\\eldenring.exe",
               "enabled": true,
               "monitor": "current",
               "sizeMode": "fill",
@@ -36,7 +36,8 @@ public sealed class ConfigSerializerTests
         Assert.Equal("B", config.Hotkey.Key);
         Assert.Equal(AutostartMode.Normal, config.Autostart);
         var profile = Assert.Single(config.Profiles);
-        Assert.Equal("eldenring.exe", profile.Exe);
+        Assert.Equal(@"D:\Games\Elden Ring\Game\eldenring.exe", profile.Path);
+        Assert.Equal("eldenring.exe", profile.ExeName);
         Assert.Equal("current", profile.Monitor);
         Assert.Equal(SizeMode.Fill, profile.SizeMode);
         Assert.Equal(1920, profile.Custom.Width);
@@ -45,14 +46,15 @@ public sealed class ConfigSerializerTests
 
         var json = ConfigSerializer.Serialize(config);
         Assert.Contains("\"sizeMode\": \"fill\"", json, StringComparison.Ordinal);
-        Assert.Contains("\"autostart\": \"normal\"", json, StringComparison.Ordinal);
+        Assert.Contains("\"path\":", json, StringComparison.Ordinal);
+        Assert.DoesNotContain("\"exe", json, StringComparison.Ordinal);
         Assert.Equal(json, ConfigSerializer.Serialize(ConfigSerializer.Deserialize(json)));
     }
 
     [Fact]
     public void Deserialize_MissingFields_UsesDefaults()
     {
-        var config = ConfigSerializer.Deserialize("""{"profiles":[{"exe":"a.exe"}]}""");
+        var config = ConfigSerializer.Deserialize("""{"profiles":[{"path":"C:\\a.exe"}]}""");
 
         Assert.True(config.Enabled);
         Assert.Equal(["Ctrl", "Alt"], config.Hotkey.Modifiers);
@@ -67,7 +69,7 @@ public sealed class ConfigSerializerTests
 
     [Theory]
     [InlineData("{ not json")]
-    [InlineData("""{"profiles":[{"exe":"a.exe","sizeMode":"stretch"}]}""")]
+    [InlineData("""{"profiles":[{"path":"C:\\a.exe","sizeMode":"stretch"}]}""")]
     public void Deserialize_MalformedOrUnknownEnum_Throws(string json)
         => Assert.ThrowsAny<JsonException>(() => ConfigSerializer.Deserialize(json));
 
@@ -76,25 +78,26 @@ public sealed class ConfigSerializerTests
         => Assert.False(ConfigSerializer.Deserialize("{ // off\n \"enabled\": false, }").Enabled);
 
     [Fact]
-    public void Normalize_DropsAndClampsJunk()
+    public void Normalize_DropsBlankRelativeAndDuplicatePaths()
     {
         var config = ConfigSerializer.Deserialize("""
             {
               "hotkey": null,
               "profiles": [
-                { "exe": "" },
-                { "exe": "Game", "custom": { "width": 0, "height": -5 } },
-                { "exe": "game.exe", "applyDelayMs": 42 },
-                { "exe": "x", "applyDelayMs": -5 },
-                { "exe": "y", "applyDelayMs": 99999 },
-                { "exe": "z", "monitor": "" }
+                { "path": "" },
+                { "path": "game.exe" },
+                { "path": "D:/G/a.exe", "custom": { "width": 0, "height": -5 } },
+                { "path": "d:\\g\\A.EXE", "applyDelayMs": 42 },
+                { "path": "D:\\G\\b.exe", "applyDelayMs": -5 },
+                { "path": "D:\\G\\c.exe", "applyDelayMs": 99999 },
+                { "path": "D:\\G\\d.exe", "monitor": "" }
               ]
             }
             """);
 
         var normalized = ConfigSerializer.Normalize(config);
 
-        Assert.Equal(["game.exe", "x.exe", "y.exe", "z.exe"], normalized.Profiles.Select(p => p.Exe));
+        Assert.Equal([@"D:\G\a.exe", @"D:\G\b.exe", @"D:\G\c.exe", @"D:\G\d.exe"], normalized.Profiles.Select(p => p.Path));
         Assert.Equal(500, normalized.Profiles[0].ApplyDelayMs);
         Assert.Equal(1920, normalized.Profiles[0].Custom.Width);
         Assert.Equal(1080, normalized.Profiles[0].Custom.Height);
@@ -106,11 +109,12 @@ public sealed class ConfigSerializerTests
     }
 
     [Fact]
-    public void CreateDefault_UsesNormalizedExeAndDefaults()
+    public void CreateDefault_NormalizesPath()
     {
-        var profile = GameProfile.CreateDefault(@"C:\Games\Foo.EXE");
+        var profile = GameProfile.CreateDefault("C:/Games/Foo.EXE");
 
-        Assert.Equal("foo.exe", profile.Exe);
+        Assert.Equal(@"C:\Games\Foo.EXE", profile.Path);
+        Assert.Equal("foo.exe", profile.ExeName);
         Assert.Equal(SizeMode.Fill, profile.SizeMode);
         Assert.Equal("current", profile.Monitor);
     }

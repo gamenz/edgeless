@@ -11,7 +11,7 @@ namespace Edgeless.IntegrationTests.Windowing;
 public sealed class BorderlessApplierTests
 {
     private readonly WindowRegistry _registry = new();
-    private readonly WindowFinder _finder = new(new ProcessNameCache(), (uint)Environment.ProcessId);
+    private readonly WindowFinder _finder = new(new ProcessPathCache(), (uint)Environment.ProcessId);
     private readonly BorderlessApplier _applier;
 
     public BorderlessApplierTests() => _applier = new BorderlessApplier(_registry, NullLog.Instance);
@@ -29,11 +29,21 @@ public sealed class BorderlessApplierTests
 
         var info = Describe(window);
 
-        Assert.Equal(TestWindowProcess.ExeName, info.ExeName);
+        Assert.Equal(TestWindowProcess.ExePath, info.ImagePath, StringComparer.OrdinalIgnoreCase);
+        Assert.Equal("edgeless.testwindow.exe", info.ExeName);
         Assert.Equal(window.Pid, info.Pid);
         Assert.False(_finder.IsExcluded(info));
         Assert.Equal(window.Hwnd, _finder.FindMainWindow(window.Pid));
-        Assert.Contains(_finder.FindProfileWindows([GameProfile.CreateDefault("Edgeless.TestWindow")]),
+    }
+
+    [Fact]
+    public void FindProfileWindows_MatchesFullPathNotName()
+    {
+        using var window = TestWindowProcess.Start();
+
+        Assert.DoesNotContain(_finder.FindProfileWindows([GameProfile.CreateDefault(@"C:\Elsewhere\Edgeless.TestWindow.exe")]),
+            w => w.Hwnd == window.Hwnd);
+        Assert.Contains(_finder.FindProfileWindows([GameProfile.CreateDefault(TestWindowProcess.ExePath)]),
             w => w.Hwnd == window.Hwnd);
     }
 

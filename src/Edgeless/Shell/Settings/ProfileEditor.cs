@@ -35,10 +35,16 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
 
     public void OnSizeModeChanged() => UpdateCustomEnabled();
 
-    public void Add()
+    /// <summary>Picks a game exe with the Open File dialog; an already listed path just gets selected.</summary>
+    public void Add(nint owner)
     {
         Commit();
-        RefreshList(draft.AddProfile());
+        var path = FileDialog.PickExe(owner, null);
+        var index = path is null ? -1 : draft.AddProfile(path);
+        if (index >= 0)
+        {
+            RefreshList(index);
+        }
     }
 
     public void Remove()
@@ -62,7 +68,6 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         }
 
         var p = draft.Profiles[_selected];
-        p.Exe = Win32Controls.GetText(control(ExeEdit)).Trim();
         p.Enabled = Win32Controls.GetCheck(control(EnabledCheck));
         var monitor = Win32Controls.GetSelection(control(MonitorCombo), isCombo: true);
         p.Monitor = monitor >= 0 && monitor < _monitorOptions.Count ? _monitorOptions[monitor].Value : p.Monitor;
@@ -73,16 +78,11 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         p.Custom.Height = SettingsDraft.ParseInt(Win32Controls.GetText(control(CustomHeight)), p.Custom.Height);
         p.AddPopupStyle = Win32Controls.GetCheck(control(PopupCheck));
         p.ApplyDelayMs = SettingsDraft.ParseInt(Win32Controls.GetText(control(DelayEdit)), p.ApplyDelayMs);
-
-        // Keep the list text in sync with an edited exe name.
-        var selected = _selected;
-        Win32Controls.SetItems(control(ProfileList), isCombo: false, draft.Profiles.Select(x => x.Exe));
-        Win32Controls.SetSelection(control(ProfileList), isCombo: false, selected);
     }
 
     private void RefreshList(int select)
     {
-        Win32Controls.SetItems(control(ProfileList), isCombo: false, draft.Profiles.Select(p => p.Exe));
+        Win32Controls.SetItems(control(ProfileList), isCombo: false, draft.Profiles.Select(SettingsDraft.ListLabel));
         Win32Controls.SetSelection(control(ProfileList), isCombo: false, select);
         _selected = select;
         Load();
@@ -102,7 +102,7 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         Win32Controls.SetItems(control(MonitorCombo), isCombo: true, _monitorOptions.Select(o => o.Label));
         Win32Controls.SetSelection(control(MonitorCombo), isCombo: true, monitorIndex);
 
-        Win32Controls.SetText(control(ExeEdit), hasProfile ? p.Exe : "");
+        Win32Controls.SetText(control(ExeEdit), hasProfile ? p.Path : "");
         Win32Controls.SetCheck(control(EnabledCheck), p.Enabled);
         Win32Controls.SetSelection(control(SizeModeCombo), isCombo: true, (int)p.SizeMode);
         Win32Controls.SetText(control(CustomX), p.Custom.X.ToString(System.Globalization.CultureInfo.InvariantCulture));

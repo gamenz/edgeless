@@ -52,7 +52,12 @@ public sealed class GameProfile
 {
     public const int DefaultApplyDelayMs = 500;
 
-    public string Exe { get; set; } = "";
+    /// <summary>Full path of the game exe; the only thing a profile matches on.</summary>
+    public string Path { get; set; } = "";
+
+    /// <summary>Lower-case file name of <see cref="Path"/>, for display only.</summary>
+    [JsonIgnore]
+    public string ExeName => ExePath.FileName(Path);
 
     public bool Enabled { get; set; } = true;
 
@@ -66,7 +71,7 @@ public sealed class GameProfile
 
     public int ApplyDelayMs { get; set; } = DefaultApplyDelayMs;
 
-    public static GameProfile CreateDefault(string exe) => new() { Exe = ExeNameMatcher.Normalize(exe) };
+    public static GameProfile CreateDefault(string path) => new() { Path = ExePath.Normalize(path) };
 }
 
 /// <summary>Custom window rect, relative to the selected monitor's top-left corner.</summary>

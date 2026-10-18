@@ -7,7 +7,7 @@ public sealed class WindowRegistryTests
 {
     private static ManagedWindow Window(nint hwnd, uint pid) => new()
     {
-        Hwnd = hwnd, Pid = pid, ExeName = "game.exe", OriginalStyles = default, OriginalPlacement = default,
+        Hwnd = hwnd, Pid = pid, ImagePath = @"C:\Games\game.exe", OriginalStyles = default, OriginalPlacement = default,
         Profile = new GameProfile(),
     };
 

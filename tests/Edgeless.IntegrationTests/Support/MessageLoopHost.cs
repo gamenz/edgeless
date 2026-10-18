@@ -88,7 +88,7 @@ public sealed class MessageLoopHost : IDisposable
         {
             _window = new MessageWindow();
             Registry = new WindowRegistry();
-            var finder = new WindowFinder(new ProcessNameCache(), (uint)Environment.ProcessId);
+            var finder = new WindowFinder(new ProcessPathCache(), (uint)Environment.ProcessId);
             var applier = new BorderlessApplier(Registry, Log);
             Controller = new EdgelessController(config, finder, applier, Registry, new WinEventWatcher(), _window,
                 Notifier, new ReapplyGuard(TimeProvider.System), Log);
