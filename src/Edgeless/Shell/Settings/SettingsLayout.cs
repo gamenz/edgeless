@@ -9,7 +9,8 @@ internal static class SettingsLayout
     public const int ProfileList = 100;
     public const int AddButton = 101;
     public const int RemoveButton = 102;
-    public const int ExeEdit = 110;
+    public const int PathEdit = 110;
+    public const int ChangePathButton = 120;
     public const int EnabledCheck = 111;
     public const int MonitorCombo = 112;
     public const int SizeModeCombo = 113;
@@ -30,7 +31,7 @@ internal static class SettingsLayout
     public static readonly (string Text, int X, int Y, int Width)[] Labels =
     [
         ("Danh sách game", 12, 12, 200),
-        ("Tên exe", 228, 14, 118),
+        ("Đường dẫn", 228, 14, 118),
         ("Màn hình", 228, 76, 118),
         ("Chế độ kích thước", 228, 108, 118),
         ("Tuỳ chỉnh x, y, w, h", 228, 140, 118),
@@ -45,7 +46,8 @@ internal static class SettingsLayout
         [ProfileList] = (12, 34, 200, 300),
         [AddButton] = (12, 342, 96, 28),
         [RemoveButton] = (116, 342, 96, 28),
-        [ExeEdit] = (350, 10, 270, 24),
+        [PathEdit] = (350, 10, 190, 24),
+        [ChangePathButton] = (545, 10, 75, 24),
         [EnabledCheck] = (350, 44, 270, 22),
         [MonitorCombo] = (350, 72, 270, 200),
         [SizeModeCombo] = (350, 104, 270, 200),

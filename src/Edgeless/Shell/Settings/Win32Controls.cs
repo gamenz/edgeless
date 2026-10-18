@@ -18,6 +18,7 @@ internal static unsafe class Win32Controls
     public const uint BS_AUTOCHECKBOX = 0x0003;
     public const uint BS_DEFPUSHBUTTON = 0x0001;
     public const uint ES_AUTOHSCROLL = 0x0080;
+    public const uint ES_READONLY = 0x0800;
 
     public const uint WM_COMMAND = 0x0111;
     public const int LBN_SELCHANGE = 1;

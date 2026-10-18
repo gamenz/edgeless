@@ -11,7 +11,7 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         ["fill — phủ kín màn hình", "center — giữ kích thước, căn giữa", "custom — tuỳ chỉnh"];
 
     private static readonly int[] DetailControls =
-        [ExeEdit, EnabledCheck, MonitorCombo, SizeModeCombo, CustomX, CustomY, CustomWidth, CustomHeight, PopupCheck, DelayEdit];
+        [ChangePathButton, EnabledCheck, MonitorCombo, SizeModeCombo, CustomX, CustomY, CustomWidth, CustomHeight, PopupCheck, DelayEdit];
 
     private List<MonitorOption> _monitorOptions = [];
     private int _selected = -1;
@@ -44,6 +44,22 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         if (index >= 0)
         {
             RefreshList(index);
+        }
+    }
+
+    /// <summary>Points the selected profile at another exe; a path used by another profile is rejected.</summary>
+    public void ChangePath(nint owner)
+    {
+        if (_selected < 0)
+        {
+            return;
+        }
+
+        Commit();
+        var path = FileDialog.PickExe(owner, draft.Profiles[_selected].Path);
+        if (path is not null && draft.ReplacePath(_selected, path))
+        {
+            RefreshList(_selected);
         }
     }
 
@@ -102,7 +118,7 @@ internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDe
         Win32Controls.SetItems(control(MonitorCombo), isCombo: true, _monitorOptions.Select(o => o.Label));
         Win32Controls.SetSelection(control(MonitorCombo), isCombo: true, monitorIndex);
 
-        Win32Controls.SetText(control(ExeEdit), hasProfile ? p.Path : "");
+        Win32Controls.SetText(control(PathEdit), hasProfile ? p.Path : "");
         Win32Controls.SetCheck(control(EnabledCheck), p.Enabled);
         Win32Controls.SetSelection(control(SizeModeCombo), isCombo: true, (int)p.SizeMode);
         Win32Controls.SetText(control(CustomX), p.Custom.X.ToString(System.Globalization.CultureInfo.InvariantCulture));

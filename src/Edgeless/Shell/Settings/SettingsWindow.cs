@@ -88,9 +88,10 @@ internal sealed unsafe class SettingsWindow
         const uint Edit = Tab | Win32Controls.ES_AUTOHSCROLL;
         Add(ProfileList, "LISTBOX", "", Tab | Win32Controls.LBS_NOTIFY | Win32Controls.LBS_NOINTEGRALHEIGHT
             | Win32Controls.WS_VSCROLL, Win32Controls.WS_EX_CLIENTEDGE);
-        Add(AddButton, "BUTTON", "Thêm", Tab);
+        Add(AddButton, "BUTTON", "Thêm…", Tab);
         Add(RemoveButton, "BUTTON", "Xoá", Tab);
-        Add(ExeEdit, "EDIT", "", Edit, Win32Controls.WS_EX_CLIENTEDGE);
+        Add(PathEdit, "EDIT", "", Edit | Win32Controls.ES_READONLY, Win32Controls.WS_EX_CLIENTEDGE);
+        Add(ChangePathButton, "BUTTON", "Đổi…", Tab);
         Add(EnabledCheck, "BUTTON", "Bật", Tab | Win32Controls.BS_AUTOCHECKBOX);
         Add(MonitorCombo, "COMBOBOX", "", Combo);
         Add(SizeModeCombo, "COMBOBOX", "", Combo);
@@ -167,6 +168,9 @@ internal sealed unsafe class SettingsWindow
                 break;
             case AddButton when code == Win32Controls.BN_CLICKED:
                 _editor.Add(_hwnd);
+                break;
+            case ChangePathButton when code == Win32Controls.BN_CLICKED:
+                _editor.ChangePath(_hwnd);
                 break;
             case RemoveButton when code == Win32Controls.BN_CLICKED:
                 _editor.Remove();

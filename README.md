@@ -19,8 +19,16 @@ nào đảm bảo tuyệt đối không bị ban**: một số game cấm mọi 
 
 ## Sử dụng
 
-1. Chạy `Edgeless.exe`; icon xuất hiện ở system tray.
-2. Mở game ở chế độ Windowed, focus vào game, rồi chuột phải icon → **Thêm "<game>.exe" vào danh sách**.
+1. Chạy `Edgeless.exe`; icon xuất hiện ở system tray (Windows 11 có thể ẩn icon trong mũi tên **^**). App không có
+   cửa sổ chính; chạy `Edgeless.exe` lần nữa sẽ mở cửa sổ cài đặt.
+2. Thêm game, theo một trong hai cách:
+   - Mở game ở chế độ Windowed, focus vào game, rồi chuột phải icon → **Thêm "<game>.exe" vào danh sách**
+     (cách chắc chắn nhất, vì lưu đúng file exe đang chạy).
+   - **Cài đặt…** → **Thêm…** → chọn file exe của game.
+
+   Game được nhận diện theo **đường dẫn đầy đủ** của file exe, nên hai game trùng tên exe ở hai thư mục khác nhau
+   không bị lẫn. Lưu ý: nếu chọn file launcher nhưng game thật chạy bằng một exe khác thì profile sẽ không khớp;
+   khi đó hãy thêm game từ menu tray lúc game đang chạy. Game được chuyển sang thư mục khác → dùng **Đổi…**.
    Từ đó mỗi lần game được focus, Edgeless tự áp dụng borderless.
 3. **Hotkey** `Ctrl+Alt+B` (đổi được): bật/tắt borderless cho cửa sổ đang focus, kể cả khi game chưa có trong danh sách.
 4. **Cài đặt…** (hoặc double-click icon): mỗi game chọn màn hình, chế độ `fill` (phủ kín) / `center` (giữ kích thước,
