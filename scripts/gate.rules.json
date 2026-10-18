@@ -44,6 +44,7 @@
     ],
     "openProcessFile": "src/Edgeless/Interop/ForeignProcess.cs",
     "openProcessRequiredRight": "PROCESS_QUERY_LIMITED_INFORMATION",
+    "openProcessAllowedIdentifiers": ["PROCESS_ACCESS_RIGHTS"],
     "nativeMethodsFile": "src/Edgeless/NativeMethods.txt",
     "nativeMethodsForeignWhitelist": [
       "EnumWindows", "GetWindowThreadProcessId", "IsWindow", "IsWindowVisible", "IsIconic", "IsZoomed", "GetWindow",

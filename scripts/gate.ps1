@@ -146,7 +146,9 @@ function Test-AntiCheatSource([string]$rel, [string]$text, $antiCheat) {
     }
     if ($rel -eq $antiCheat.openProcessFile) {
         foreach ($right in [regex]::Matches($text, 'PROCESS_[A-Z_]+')) {
-            if ($right.Value -ne $antiCheat.openProcessRequiredRight) {
+            $isAllowed = ($right.Value -eq $antiCheat.openProcessRequiredRight) -or
+                (@($antiCheat.openProcessAllowedIdentifiers) -ccontains $right.Value)
+            if (-not $isAllowed) {
                 Add-Failure 'anti-cheat' $rel "process right '$($right.Value)' not allowed"
             }
         }

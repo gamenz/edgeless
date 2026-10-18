@@ -7,6 +7,8 @@
     <RuntimeIdentifier Condition="'$(_IsPublishing)' == 'true'">win-x64</RuntimeIdentifier>
     <InvariantGlobalization>true</InvariantGlobalization>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <!-- x64 only: CsWin32 emits GetWindowLongPtr/SetWindowLongPtr just for 64-bit targets. -->
+    <PlatformTarget>x64</PlatformTarget>
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <ApplicationIcon>Resources\app.ico</ApplicationIcon>
   </PropertyGroup>
