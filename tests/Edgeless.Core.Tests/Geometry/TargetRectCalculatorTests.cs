@@ -5,8 +5,8 @@ namespace Edgeless.Core.Tests.Geometry;
 
 public sealed class TargetRectCalculatorTests
 {
-    private static readonly MonitorDescriptor Primary = new(@"\.\DISPLAY1", new RectI(0, 0, 2560, 1440));
-    private static readonly MonitorDescriptor Left = new(@"\.\DISPLAY2", new RectI(-1920, 200, 0, 1280));
+    private static readonly MonitorDescriptor Primary = new(@"\\.\DISPLAY1", new RectI(0, 0, 2560, 1440));
+    private static readonly MonitorDescriptor Left = new(@"\\.\DISPLAY2", new RectI(-1920, 200, 0, 1280));
     private static readonly MonitorDescriptor[] All = [Primary, Left];
 
     [Fact]
@@ -21,7 +21,7 @@ public sealed class TargetRectCalculatorTests
     [Fact]
     public void SelectMonitor_ByDeviceName_IgnoresCase()
     {
-        var result = TargetRectCalculator.SelectMonitor(@"\.\display2", Primary, All, out var fellBack);
+        var result = TargetRectCalculator.SelectMonitor(@"\\.\display2", Primary, All, out var fellBack);
 
         Assert.Equal(Left, result);
         Assert.False(fellBack);
@@ -30,7 +30,7 @@ public sealed class TargetRectCalculatorTests
     [Fact]
     public void SelectMonitor_MissingDevice_FallsBackToCurrent()
     {
-        var result = TargetRectCalculator.SelectMonitor(@"\.\DISPLAY9", Primary, All, out var fellBack);
+        var result = TargetRectCalculator.SelectMonitor(@"\\.\DISPLAY9", Primary, All, out var fellBack);
 
         Assert.Equal(Primary, result);
         Assert.True(fellBack);
