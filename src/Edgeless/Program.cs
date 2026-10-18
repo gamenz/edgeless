@@ -1,5 +1,6 @@
 using Edgeless.App;
 using Edgeless.Platform;
+using Edgeless.Shell;
 
 namespace Edgeless;
 
@@ -22,6 +23,13 @@ internal static class Program
         {
             SingleInstance.SignalExisting();
             return 0;
+        }
+
+        // Portable app: config.json and logs\ must be writable next to the exe (e.g. not under Program Files).
+        if (!AppPaths.IsDirectoryWritable(AppPaths.ExeDirectory))
+        {
+            ErrorDialog.Show(AppPaths.NotWritableMessage(AppPaths.ExeDirectory));
+            return 2;
         }
 
         return AppHost.Run(options);

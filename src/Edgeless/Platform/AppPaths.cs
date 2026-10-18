@@ -1,14 +1,38 @@
 namespace Edgeless.Platform;
 
+/// <summary>Portable layout: config.json and logs\ live next to Edgeless.exe.</summary>
 internal static class AppPaths
 {
-    /// <summary>%APPDATA%\Edgeless (config.json).</summary>
-    public static string ConfigDirectory { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "Edgeless");
+    public static string ExePath { get; } = Environment.ProcessPath ?? Path.Combine(AppContext.BaseDirectory, "Edgeless.exe");
 
-    /// <summary>%LOCALAPPDATA%\Edgeless\logs.</summary>
-    public static string LogDirectory { get; } =
-        Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "Edgeless", "logs");
+    public static string ExeDirectory { get; } = Path.GetDirectoryName(ExePath) ?? AppContext.BaseDirectory;
 
-    public static string ExePath { get; } = Environment.ProcessPath ?? "Edgeless.exe";
+    /// <summary>Folder holding config.json (the exe's folder).</summary>
+    public static string ConfigDirectory => ExeDirectory;
+
+    /// <summary>&lt;exe folder&gt;\logs.</summary>
+    public static string LogDirectory { get; } = Path.Combine(ExeDirectory, "logs");
+
+    /// <summary>True when a file can be created (and removed) in <paramref name="directory"/>.</summary>
+    public static bool IsDirectoryWritable(string directory)
+    {
+        try
+        {
+            var probe = Path.Combine(directory, $".edgeless-write-test-{Guid.NewGuid():N}");
+            using (new FileStream(probe, FileMode.CreateNew, FileAccess.Write, FileShare.None, 1, FileOptions.DeleteOnClose))
+            {
+            }
+
+            return true;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or NotSupportedException)
+        {
+            return false;
+        }
+    }
+
+    public static string NotWritableMessage(string directory)
+        => "Edgeless cần ghi config.json và thư mục logs ngay cạnh file exe, nhưng không có quyền ghi vào:\n\n"
+            + directory
+            + "\n\nHãy chuyển Edgeless.exe sang một thư mục ghi được (ví dụ trong thư mục người dùng) rồi chạy lại.";
 }

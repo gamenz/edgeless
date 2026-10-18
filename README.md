@@ -30,8 +30,11 @@ nào đảm bảo tuyệt đối không bị ban**: một số game cấm mọi 
 
 | Dữ liệu | Vị trí |
 |---|---|
-| Cấu hình | `%APPDATA%\Edgeless\config.json` (file hỏng sẽ được sao lưu và thay bằng mặc định) |
-| Log | `%LOCALAPPDATA%\Edgeless\logs\edgeless.log` (xoay vòng 1 MB × 3 file) |
+| Cấu hình | `config.json` cạnh `Edgeless.exe` (file hỏng sẽ được sao lưu và thay bằng mặc định) |
+| Log | `logs\edgeless.log` cạnh `Edgeless.exe` (xoay vòng 1 MB × 3 file) |
+
+Edgeless là app portable: copy cả thư mục là mang theo được cấu hình. Đặt exe ở thư mục ghi được (không đặt trong
+`Program Files`); nếu không ghi được, app sẽ báo lỗi và thoát.
 
 ## Hiệu năng (đo trên bản publish, 2026-10-18)
 

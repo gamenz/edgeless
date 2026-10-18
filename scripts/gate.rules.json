@@ -60,7 +60,7 @@
       "RegisterHotKey", "UnregisterHotKey", "GetModuleHandle", "Shell_NotifyIcon", "CreatePopupMenu", "AppendMenu",
       "TrackPopupMenu", "DestroyMenu", "SetForegroundWindow", "FindWindow", "LoadImage", "SendMessage",
       "CreateFontIndirect", "DeleteObject", "ShellExecute", "InitCommonControlsEx", "IsDialogMessage", "EnableWindow",
-      "SetWindowText", "GetSystemMetricsForDpi", "SystemParametersInfoForDpi", "LoadCursor", "GetStockObject"
+      "SetWindowText", "MessageBox", "GetSystemMetricsForDpi", "SystemParametersInfoForDpi", "LoadCursor", "GetStockObject"
     ],
     "nativeMethodsAllowedPrefixes": ["WS_", "SWP_", "SW_", "WM_", "GWL_", "MONITOR", "DWM", "EVENT_", "WINEVENT_",
       "OBJID_", "PROCESS_QUERY_LIMITED_INFORMATION", "WINDOWPLACEMENT", "NOTIFYICON", "NIF_", "NIM_", "NIIF_", "MF_",

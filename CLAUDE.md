@@ -76,8 +76,9 @@ Our own windows / own process may use any API normally (tray icon, settings wind
 - **No WinForms/WPF**: tray icon (`Shell_NotifyIcon`) and the small settings window are raw Win32
   (keeps AOT working, exe ~ a few MB, near-zero idle CPU).
 - P/Invoke via **CsWin32** source generator (`NativeMethods.txt`), AOT-safe. No reflection-based interop.
-- JSON via **System.Text.Json source generation** (AOT-safe). Config: `%APPDATA%\Edgeless\config.json`.
-- Logs: `%LOCALAPPDATA%\Edgeless\logs\`, size-capped rolling files.
+- JSON via **System.Text.Json source generation** (AOT-safe).
+- **Portable**: `config.json` and `logs\` (size-capped rolling files) live next to `Edgeless.exe`; a non-writable
+  exe folder → error dialog and exit, no fallback to `%APPDATA%`.
 - DPI: **Per-Monitor V2** declared in `app.manifest`; all geometry in physical pixels.
 - Event-driven only (WinEvent hooks + hotkey + message loop). **No polling loops/timers while idle**
   (a one-shot timer for debounce/delay is fine).

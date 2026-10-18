@@ -199,7 +199,8 @@ One simple, fixed-size, DPI-scaled window:
 
 ### 4.11 Configuration
 
-`%APPDATA%\Edgeless\config.json`:
+`config.json` in the same folder as `Edgeless.exe` (portable: everything lives next to the exe). If that folder is
+not writable (e.g. under `Program Files`), show an error dialog asking the user to move the exe, and exit.
 
 ```json
 {
@@ -248,7 +249,7 @@ One simple, fixed-size, DPI-scaled window:
 
 ### 4.14 Logging and notifications
 
-- `%LOCALAPPDATA%\Edgeless\logs\edgeless.log`, rolled at 1 MB, 3 files kept. Each line: timestamp, level
+- `logs\edgeless.log` next to `Edgeless.exe`, rolled at 1 MB, 3 files kept. Each line: timestamp, level
   (Info/Warn/Error), message. Flushed to disk on every line.
 - Logged: start/exit, apply/restore (exe, pid, hwnd, old → new rect), API failures with error codes, guard trips,
   config errors, hotkey errors.
@@ -289,7 +290,8 @@ One simple, fixed-size, DPI-scaled window:
 - The hotkey works on any non-excluded window, does not add it to the list, and obeys the global switch.
 - Monitors are stored by device name instead of index.
 - Autostart has 3 modes; the elevated mode uses Task Scheduler.
-- Logs live in `%LOCALAPPDATA%` (config stays in `%APPDATA%` as originally requested).
+- Portable layout (changed on 2026-10-18 at the user's request): `config.json` and `logs\` live next to the exe; a
+  non-writable exe folder is a startup error, with no fallback to `%APPDATA%`.
 - No UWP/Game Pass support, no managing several windows of one process at once.
 
 ## 8. Left to the builder
