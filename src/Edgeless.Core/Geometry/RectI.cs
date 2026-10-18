@@ -8,4 +8,8 @@ public readonly record struct RectI(int Left, int Top, int Right, int Bottom)
     public int Height => Bottom - Top;
 
     public static RectI FromXywh(int x, int y, int width, int height) => new(x, y, x + width, y + height);
+
+    /// <summary>True when the two rects share at least one pixel (touching edges do not count).</summary>
+    public bool Intersects(RectI other)
+        => Left < other.Right && other.Left < Right && Top < other.Bottom && other.Top < Bottom;
 }

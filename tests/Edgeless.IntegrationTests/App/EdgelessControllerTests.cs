@@ -28,7 +28,7 @@ public sealed class EdgelessControllerTests
 
         Assert.False(IsBorderless(window.Hwnd));
         Assert.True(TestUser32.WaitUntil(() => IsBorderless(window.Hwnd), TimeSpan.FromSeconds(2)));
-        Assert.Equal(MonitorApi.FromWindow(window.Hwnd).Bounds, ForeignWindow.GetWindowRect(window.Hwnd));
+        Assert.Equal(FillTarget.For(window.Hwnd), ForeignWindow.GetWindowRect(window.Hwnd));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class EdgelessControllerTests
 
         Assert.True(TestUser32.WaitUntil(() => host.Log.Count("Applied:") >= 2, TimeSpan.FromSeconds(1.5)));
         Assert.True(TestUser32.WaitUntil(() => IsBorderless(window.Hwnd), TimeSpan.FromSeconds(1)));
-        Assert.Equal(MonitorApi.FromWindow(window.Hwnd).Bounds, ForeignWindow.GetWindowRect(window.Hwnd));
+        Assert.Equal(FillTarget.For(window.Hwnd), ForeignWindow.GetWindowRect(window.Hwnd));
     }
 
     [Fact]
@@ -97,7 +97,7 @@ public sealed class EdgelessControllerTests
         Assert.False(IsBorderless(window.Hwnd));
         Assert.Equal(0, host.Invoke(() => host.Registry.All.Count));
 
-        TestUser32.ShowWindow(window.Hwnd, TestUser32.SW_RESTORE);
+        TestUser32.ShowWindow(window.Hwnd, TestUser32.SW_SHOWNOACTIVATE);
         Assert.True(TestUser32.WaitUntil(() => IsBorderless(window.Hwnd), TimeSpan.FromSeconds(2)));
     }
 

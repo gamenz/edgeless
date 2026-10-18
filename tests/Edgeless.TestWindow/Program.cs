@@ -3,10 +3,11 @@ using System.Runtime.InteropServices;
 namespace Edgeless.TestWindow;
 
 /// <summary>
-/// Usage: Edgeless.TestWindow.exe --title T [--mode normal|reset-once|fight] [--delay-ms N] [--maximized] [--visible]
+/// Usage: Edgeless.TestWindow.exe --title T [--mode normal|reset-once|fight|track-size] [--delay-ms N] [--maximized] [--visible]
 /// The window is fully transparent unless --visible is given (automated tests flash many windows).
 /// reset-once: after the first external style change, restore the framed 800x600 window once after delay-ms.
 /// fight: do that after every external style change.
+/// track-size: count outer size changes in the title ("size-changes=N"), like an engine that resizes only on a real resize.
 /// </summary>
 internal static class Program
 {
@@ -41,11 +42,16 @@ internal sealed class GameForm : Form
     private const uint WS_OVERLAPPEDWINDOW = 0x00CF0000;
     private const uint SWP_FRAMECHANGED = 0x0020;
     private const uint SWP_NOZORDER = 0x0004;
+    private const uint SWP_NOSIZE = 0x0001;
+    private const int WM_WINDOWPOSCHANGED = 0x0047;
 
     private readonly Options _options;
     private readonly System.Windows.Forms.Timer _resetTimer = new();
     private bool _selfChanging;
     private int _resets;
+    private int _sizeChanges;
+    private int _lastOuterWidth;
+    private int _lastOuterHeight;
 
     public GameForm(Options options)
     {
@@ -69,9 +75,17 @@ internal sealed class GameForm : Form
         _resetTimer.Tick += (_, _) => ResetFrame();
     }
 
+    /// <summary>Never steal focus from the user while automated tests run (unless --visible).</summary>
+    protected override bool ShowWithoutActivation => !_options.Visible;
+
     protected override void WndProc(ref Message m)
     {
         base.WndProc(ref m);
+        if (m.Msg == WM_WINDOWPOSCHANGED && _options.Mode == "track-size" && IsHandleCreated)
+        {
+            TrackOuterSize(Marshal.PtrToStructure<WindowPos>(m.LParam));
+        }
+
         if (m.Msg == WM_STYLECHANGED && (int)m.WParam == GWL_STYLE && !_selfChanging && IsHandleCreated)
         {
             var wantsReset = _options.Mode == "fight" || (_options.Mode == "reset-once" && _resets == 0);
@@ -80,6 +94,20 @@ internal sealed class GameForm : Form
                 _resetTimer.Start();
             }
         }
+    }
+
+    /// <summary>Counts only real outer-size changes; a frame-only change at the same outer size is not counted.</summary>
+    private void TrackOuterSize(WindowPos pos)
+    {
+        if ((pos.Flags & SWP_NOSIZE) != 0 || (pos.Width == _lastOuterWidth && pos.Height == _lastOuterHeight))
+        {
+            return;
+        }
+
+        _lastOuterWidth = pos.Width;
+        _lastOuterHeight = pos.Height;
+        _sizeChanges++;
+        Text = $"size-changes={_sizeChanges}";
     }
 
     private void ResetFrame()
@@ -101,6 +129,18 @@ internal sealed class GameForm : Form
         }
 
         base.Dispose(disposing);
+    }
+
+    [StructLayout(LayoutKind.Sequential)]
+    private readonly struct WindowPos
+    {
+        public readonly nint Hwnd;
+        public readonly nint InsertAfter;
+        public readonly int X;
+        public readonly int Y;
+        public readonly int Width;
+        public readonly int Height;
+        public readonly uint Flags;
     }
 
     [DllImport("user32.dll")]

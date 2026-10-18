@@ -31,8 +31,14 @@ public static class TargetRectCalculator
         return current;
     }
 
-    public static RectI ComputeTarget(SizeMode mode, RectI monitorBounds, int clientWidth, int clientHeight, CustomRect custom)
+    /// <summary>
+    /// Target window rect. <paramref name="allMonitors"/> is only used by fill (overhang edge selection);
+    /// <paramref name="edge"/> is None for center and custom.
+    /// </summary>
+    public static RectI ComputeTarget(SizeMode mode, RectI monitorBounds, IReadOnlyList<RectI> allMonitors,
+        int clientWidth, int clientHeight, CustomRect custom, out OverhangEdge edge)
     {
+        edge = OverhangEdge.None;
         switch (mode)
         {
             case SizeMode.Center:
@@ -46,7 +52,7 @@ public static class TargetRectCalculator
             case SizeMode.Custom:
                 return RectI.FromXywh(monitorBounds.Left + custom.X, monitorBounds.Top + custom.Y, custom.Width, custom.Height);
             default:
-                return monitorBounds;
+                return FillOverhang.Compute(monitorBounds, allMonitors, out edge);
         }
     }
 }

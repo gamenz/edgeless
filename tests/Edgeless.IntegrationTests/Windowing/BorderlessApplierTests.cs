@@ -56,8 +56,52 @@ public sealed class BorderlessApplierTests
 
         Assert.Equal(ApplyResult.Applied, result);
         Assert.True(StyleCalculator.IsBorderless(ForeignWindow.GetStyles(window.Hwnd), addPopupStyle: false));
-        Assert.Equal(MonitorApi.FromWindow(window.Hwnd).Bounds, ForeignWindow.GetWindowRect(window.Hwnd));
+        Assert.Equal(FillTarget.For(window.Hwnd), ForeignWindow.GetWindowRect(window.Hwnd));
         Assert.True(_registry.TryGet(window.Hwnd, out _));
+    }
+
+    [Fact]
+    public void Apply_FramedWindowAlreadyMonitorSized_ResizesSoTheWindowSeesNewSize()
+    {
+        // Unreal games switched from fullscreen to a windowed mode at monitor resolution end up framed at exactly
+        // the monitor size; dropping only the frame grows the client area without a real resize (black bars).
+        using var window = TestWindowProcess.Start(mode: "track-size");
+        var monitor = MonitorApi.FromWindow(window.Hwnd).Bounds;
+        TestUser32.SetWindowPos(window.Hwnd, 0, monitor.Left, monitor.Top, monitor.Width, monitor.Height, TestUser32.SWP_NOZORDER);
+        Assert.Equal(monitor, ForeignWindow.GetWindowRect(window.Hwnd));
+        var before = SizeChanges(window);
+
+        var result = _applier.Apply(Describe(window), new GameProfile());
+
+        var target = FillTarget.For(window.Hwnd);
+        Assert.Equal(ApplyResult.Applied, result);
+        Assert.Equal(target, ForeignWindow.GetWindowRect(window.Hwnd));
+        Assert.Equal((target.Width, target.Height), ForeignWindow.GetClientSize(window.Hwnd));
+        Assert.True(TestUser32.WaitUntil(() => SizeChanges(window) > before, TimeSpan.FromSeconds(2)));
+    }
+
+    [Fact]
+    public void Apply_WindowSetsExactMonitorAfterStretch_SeesResizeAndIsAccepted()
+    {
+        // Elden Ring: picking the monitor resolution must be a real resize of the stretched window, and the game's own
+        // borderless exact-monitor window is then left alone (no 1 px stretch, which would blur native output).
+        using var window = TestWindowProcess.Start(mode: "track-size");
+        Assert.Equal(ApplyResult.Applied, _applier.Apply(Describe(window), new GameProfile()));
+        var before = SizeChanges(window);
+        var monitor = MonitorApi.FromWindow(window.Hwnd).Bounds;
+
+        TestUser32.SetWindowPos(window.Hwnd, 0, monitor.Left, monitor.Top, monitor.Width, monitor.Height, TestUser32.SWP_NOZORDER);
+
+        Assert.True(TestUser32.WaitUntil(() => SizeChanges(window) > before, TimeSpan.FromSeconds(2)));
+        Assert.Equal(ApplyResult.AlreadyBorderless, _applier.Apply(Describe(window), new GameProfile()));
+        Assert.Equal(monitor, ForeignWindow.GetWindowRect(window.Hwnd));
+    }
+
+    private static int SizeChanges(TestWindowProcess window)
+    {
+        const string prefix = "size-changes=";
+        var title = ForeignWindow.GetTitle(window.Hwnd);
+        return title.StartsWith(prefix, StringComparison.Ordinal) ? int.Parse(title[prefix.Length..]) : 0;
     }
 
     [Fact]

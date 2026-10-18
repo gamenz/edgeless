@@ -110,6 +110,9 @@ internal sealed partial class EdgelessController
                 }
 
                 break;
+            case ApplyResult.AlreadyBorderless:
+                log.Info($"Already borderless: {window.ExeName} pid={window.Pid} hwnd=0x{window.Hwnd:X} reapply={isReapply}");
+                break;
             case ApplyResult.SkippedMinimized:
                 _pending[window.Hwnd] = (window, profile);
                 watcher.WatchProcess(window.Pid);

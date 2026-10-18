@@ -43,13 +43,17 @@ internal sealed class BorderlessApplier(WindowRegistry registry, ILog log)
         }
 
         var current = ForeignWindow.GetStyles(hwnd);
-        var target = ComputeTarget(window, profile);
+        var (target, monitorBounds, edge) = ComputeTarget(window, profile);
         var oldRect = ForeignWindow.GetWindowRect(hwnd);
-        if (StyleCalculator.IsBorderless(current, profile.AddPopupStyle) && oldRect == target)
+        // Native fit: a game's own borderless window exactly on the monitor is kept, so native output is not blurred
+        // by a 1 px stretch (spec docs/specs/2026-10-19-fill-overhang-spec.md section 3.2).
+        var nativeFit = profile.SizeMode == SizeMode.Fill && oldRect == monitorBounds;
+        if (StyleCalculator.IsBorderless(current, profile.AddPopupStyle) && (oldRect == target || nativeFit))
         {
             return ApplyResult.AlreadyBorderless;
         }
 
+        var oldClient = ForeignWindow.GetClientSize(hwnd);
         var error = ForeignWindow.SetStyles(hwnd, StyleCalculator.ComputeBorderless(current, profile.AddPopupStyle));
         if (error == 0)
         {
@@ -75,7 +79,10 @@ internal sealed class BorderlessApplier(WindowRegistry registry, ILog log)
             });
         }
 
-        log.Info($"Applied: {window.ExeName} pid={window.Pid} hwnd=0x{hwnd:X} {Format(oldRect)} -> {Format(target)}");
+        var newClient = ForeignWindow.GetClientSize(hwnd);
+        log.Info($"Applied: {window.ExeName} pid={window.Pid} hwnd=0x{hwnd:X} {Format(oldRect)} -> {Format(target)}"
+            + $" client {oldClient.Width}x{oldClient.Height} -> {newClient.Width}x{newClient.Height}"
+            + $" style=0x{current.Style:X8} exStyle=0x{current.ExStyle:X8} overhang={edge.ToString().ToLowerInvariant()}");
         return ApplyResult.Applied;
     }
 
@@ -109,17 +116,20 @@ internal sealed class BorderlessApplier(WindowRegistry registry, ILog log)
         }
     }
 
-    private RectI ComputeTarget(WindowInfo window, GameProfile profile)
+    private (RectI Target, RectI MonitorBounds, OverhangEdge Edge) ComputeTarget(WindowInfo window, GameProfile profile)
     {
         var current = MonitorApi.FromWindow(window.Hwnd);
-        var monitor = TargetRectCalculator.SelectMonitor(profile.Monitor, current, MonitorApi.EnumerateAll(), out var fellBack);
+        var all = MonitorApi.EnumerateAll();
+        var monitor = TargetRectCalculator.SelectMonitor(profile.Monitor, current, all, out var fellBack);
         if (fellBack)
         {
             log.Warn($"Monitor '{profile.Monitor}' not found for {window.ExeName}; using {current.DeviceName}");
         }
 
         var (width, height) = ForeignWindow.GetClientSize(window.Hwnd);
-        return TargetRectCalculator.ComputeTarget(profile.SizeMode, monitor.Bounds, width, height, profile.Custom);
+        var target = TargetRectCalculator.ComputeTarget(profile.SizeMode, monitor.Bounds, [.. all.Select(m => m.Bounds)],
+            width, height, profile.Custom, out var edge);
+        return (target, monitor.Bounds, edge);
     }
 
     private static string Format(RectI r) => $"({r.Left},{r.Top} {r.Width}x{r.Height})";

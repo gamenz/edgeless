@@ -88,7 +88,8 @@ Apply to one `hwnd` using its profile (or the default profile when triggered by 
      (e.g. `\\.\DISPLAY2`) → look it up via `EnumDisplayMonitors`; not found → use the current monitor and log Warn.
    - Use `rcMonitor` (not `rcWork` — the taskbar area must be covered too).
    - `sizeMode`:
-     - `fill` (default): target = `rcMonitor`.
+     - `fill` (default): target = `rcMonitor` plus a 1 px overhang on a free edge, see
+       [Fill overhang](2026-10-19-fill-overhang-spec.md).
      - `center`: keep the current client-area size, centered in `rcMonitor` (for games rendering below the monitor
        resolution, avoiding a blurry stretch).
      - `custom`: `x, y, width, height` relative to the top-left corner of the selected monitor.
@@ -100,6 +101,7 @@ Apply to one `hwnd` using its profile (or the default profile when triggered by 
 
 Steps 4–6 are **idempotent**: before applying, compare the current style/ex-style/rect with the desired values; if
 they already match, call no API at all. This is the main guard against loops caused by the app's own `SetWindowPos`.
+In `fill`, a borderless window exactly at `rcMonitor` is also treated as matching (native fit).
 
 ### 4.3 Restoring
 

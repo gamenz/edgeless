@@ -36,24 +36,40 @@ public sealed class TargetRectCalculatorTests
         Assert.True(fellBack);
     }
 
+    private static readonly RectI[] AllBounds = [.. All.Select(m => m.Bounds)];
+
     [Fact]
-    public void Fill_NegativeCoordinates_EqualsMonitorBounds()
-        => Assert.Equal(Left.Bounds, TargetRectCalculator.ComputeTarget(SizeMode.Fill, Left.Bounds, 800, 600, new()));
+    public void Fill_UsesOverhang()
+    {
+        var target = TargetRectCalculator.ComputeTarget(SizeMode.Fill, Left.Bounds, AllBounds, 800, 600, new(), out var edge);
+
+        Assert.Equal(new RectI(-1920, 200, 0, 1281), target);
+        Assert.Equal(OverhangEdge.Bottom, edge);
+    }
 
     [Fact]
     public void Center_KeepsClientSize_CentersOnMonitor()
-        => Assert.Equal(new RectI(-1360, 470, -560, 1010),
-            TargetRectCalculator.ComputeTarget(SizeMode.Center, Left.Bounds, 800, 540, new()));
+    {
+        var target = TargetRectCalculator.ComputeTarget(SizeMode.Center, Left.Bounds, AllBounds, 800, 540, new(), out var edge);
+
+        Assert.Equal(new RectI(-1360, 470, -560, 1010), target);
+        Assert.Equal(OverhangEdge.None, edge);
+    }
 
     [Fact]
     public void Center_ClientLargerThanMonitor_ClampsToMonitor()
-        => Assert.Equal(Primary.Bounds, TargetRectCalculator.ComputeTarget(SizeMode.Center, Primary.Bounds, 4000, 3000, new()));
+        => Assert.Equal(Primary.Bounds,
+            TargetRectCalculator.ComputeTarget(SizeMode.Center, Primary.Bounds, AllBounds, 4000, 3000, new(), out _));
 
     [Fact]
     public void Custom_IsRelativeToMonitorOrigin()
-        => Assert.Equal(new RectI(-1820, 250, -1020, 850),
-            TargetRectCalculator.ComputeTarget(SizeMode.Custom, Left.Bounds, 0, 0,
-                new CustomRect { X = 100, Y = 50, Width = 800, Height = 600 }));
+    {
+        var target = TargetRectCalculator.ComputeTarget(SizeMode.Custom, Left.Bounds, AllBounds, 0, 0,
+            new CustomRect { X = 100, Y = 50, Width = 800, Height = 600 }, out var edge);
+
+        Assert.Equal(new RectI(-1820, 250, -1020, 850), target);
+        Assert.Equal(OverhangEdge.None, edge);
+    }
 
     [Fact]
     public void RectI_FromXywh_ComputesEdgesAndSize()

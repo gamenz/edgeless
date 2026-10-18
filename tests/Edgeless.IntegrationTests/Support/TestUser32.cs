@@ -6,7 +6,12 @@ namespace Edgeless.IntegrationTests.Support;
 internal static partial class TestUser32
 {
     public const int SW_MINIMIZE = 6;
-    public const int SW_RESTORE = 9;
+    public const int SW_SHOWNOACTIVATE = 4; // restores a minimized window without stealing focus
+    public const uint SWP_NOZORDER = 0x0004;
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    public static partial bool SetWindowPos(nint hwnd, nint insertAfter, int x, int y, int width, int height, uint flags);
 
     [LibraryImport("user32.dll")]
     [return: MarshalAs(UnmanagedType.Bool)]
