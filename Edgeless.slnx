@@ -5,5 +5,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Edgeless.Core.Tests/Edgeless.Core.Tests.csproj" />
+    <Project Path="tests/Edgeless.IntegrationTests/Edgeless.IntegrationTests.csproj" />
+    <Project Path="tests/Edgeless.TestWindow/Edgeless.TestWindow.csproj" />
   </Folder>
 </Solution>
