@@ -30,14 +30,14 @@ internal static class SettingsLayout
     /// <summary>Static labels: (text, x, y, width).</summary>
     public static readonly (string Text, int X, int Y, int Width)[] Labels =
     [
-        ("Danh sách game", 12, 12, 240),
-        ("Đường dẫn", 268, 14, 118),
-        ("Màn hình", 268, 76, 118),
-        ("Chế độ kích thước", 268, 108, 118),
-        ("Tuỳ chỉnh x, y, w, h", 268, 140, 118),
-        ("Delay áp dụng (ms)", 268, 202, 118),
+        ("Games", 12, 12, 240),
+        ("Path", 268, 14, 118),
+        ("Monitor", 268, 76, 118),
+        ("Size mode", 268, 108, 118),
+        ("Custom x, y, w, h", 268, 140, 118),
+        ("Apply delay (ms)", 268, 202, 118),
         ("Hotkey", 268, 270, 118),
-        ("Tự khởi động", 268, 326, 118),
+        ("Start with Windows", 268, 326, 118),
     ];
 
     /// <summary>Control rectangles by id: (x, y, width, height). Combobox heights include the drop-down.</summary>

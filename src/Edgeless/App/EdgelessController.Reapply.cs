@@ -116,8 +116,8 @@ internal sealed partial class EdgelessController
                 break;
             case ApplyResult.AccessDenied:
                 notifier.Notify("uipi:" + window.ImagePath, Title,
-                    $"Game {window.ExeName} chạy với quyền admin. Hãy chạy Edgeless bằng quyền admin "
-                    + "(tray → Khởi động lại với quyền admin).");
+                    $"{window.ExeName} runs as administrator. Run Edgeless as administrator "
+                    + "(tray → Restart as administrator).");
                 break;
         }
     }
@@ -127,6 +127,6 @@ internal sealed partial class EdgelessController
         log.Warn($"Guard tripped: {window.ExeName} pid={window.Pid} hwnd=0x{window.Hwnd:X} keeps resetting its window");
         RestoreManaged(window.Hwnd, markUserDisabled: true);
         notifier.Notify("guard:" + window.ImagePath, Title,
-            $"Game {window.ExeName} liên tục reset cửa sổ, Edgeless đã dừng cho cửa sổ này.");
+            $"{window.ExeName} keeps resetting its window; Edgeless stopped managing it.");
     }
 }

@@ -8,8 +8,8 @@ namespace Edgeless.Shell.Settings;
 internal static unsafe class FileDialog
 {
     private const int MaxPath = 32768;
-    private const string Filter = "Chương trình (*.exe)\0*.exe\0\0";
-    private const string Title = "Chọn file exe của game";
+    private const string Filter = "Programs (*.exe)\0*.exe\0\0";
+    private const string Title = "Choose the game's exe";
 
     /// <returns>The chosen full path, or null when the user cancels.</returns>
     public static string? PickExe(nint owner, string? initialPath)

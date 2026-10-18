@@ -8,7 +8,7 @@ namespace Edgeless.Shell.Settings;
 internal sealed class ProfileEditor(SettingsDraft draft, IReadOnlyList<MonitorDescriptor> monitors, Func<int, nint> control)
 {
     private static readonly string[] SizeModeLabels =
-        ["fill — phủ kín màn hình", "center — giữ kích thước, căn giữa", "custom — tuỳ chỉnh"];
+        ["fill — cover the monitor", "center — keep size, centered", "custom — custom position and size"];
 
     private static readonly int[] DetailControls =
         [ChangePathButton, EnabledCheck, MonitorCombo, SizeModeCombo, CustomX, CustomY, CustomWidth, CustomHeight, PopupCheck, DelayEdit];

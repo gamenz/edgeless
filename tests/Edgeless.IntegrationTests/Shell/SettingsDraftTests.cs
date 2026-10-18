@@ -124,7 +124,7 @@ public sealed class SettingsDraftTests
 
         var options = SettingsDraft.MonitorOptions(monitors);
 
-        Assert.Equal(["Màn hình hiện tại", @"\\.\DISPLAY1 — 2560×1440", @"\\.\DISPLAY2 — 1920×1080"], options.Select(o => o.Label));
+        Assert.Equal(["Current monitor", @"\\.\DISPLAY1 — 2560×1440", @"\\.\DISPLAY2 — 1920×1080"], options.Select(o => o.Label));
         Assert.Equal(["current", @"\\.\DISPLAY1", @"\\.\DISPLAY2"], options.Select(o => o.Value));
     }
 
@@ -136,7 +136,7 @@ public sealed class SettingsDraftTests
         var index = SettingsDraft.MonitorIndex(options, @"\\.\DISPLAY7");
 
         Assert.Equal(2, index);
-        Assert.Equal(@"\\.\DISPLAY7 (không kết nối)", options[2].Label);
+        Assert.Equal(@"\\.\DISPLAY7 (disconnected)", options[2].Label);
     }
 
     [Theory]

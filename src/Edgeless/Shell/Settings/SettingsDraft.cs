@@ -95,7 +95,7 @@ internal sealed class SettingsDraft
     public AppConfig ToConfig() => ConfigSerializer.Normalize(ConfigSerializer.Deserialize(ConfigSerializer.Serialize(_copy)));
 
     public static List<MonitorOption> MonitorOptions(IEnumerable<MonitorDescriptor> monitors)
-        => [new("Màn hình hiện tại", TargetRectCalculator.CurrentMonitor),
+        => [new("Current monitor", TargetRectCalculator.CurrentMonitor),
             .. monitors.Select(m => new MonitorOption($"{m.DeviceName} — {m.Bounds.Width}×{m.Bounds.Height}", m.DeviceName))];
 
     /// <summary>Index of <paramref name="value"/>; a disconnected device is appended so saving does not lose it.</summary>
@@ -107,7 +107,7 @@ internal sealed class SettingsDraft
             return index;
         }
 
-        options.Add(new MonitorOption($"{value} (không kết nối)", value));
+        options.Add(new MonitorOption($"{value} (disconnected)", value));
         return options.Count - 1;
     }
 

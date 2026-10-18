@@ -158,33 +158,36 @@ No repeating timers, no polling. No WMI or process-start watching.
 
 ### 4.7 Tray icon and menu
 
-Tray icon via `Shell_NotifyIcon`. Tooltip: `Edgeless — Đang bật (n cửa sổ)` ("enabled, n windows") /
-`Edgeless — Đang tắt` ("disabled"). Double-click opens settings. Right-click menu (UI copy is Vietnamese):
+Tray icon via `Shell_NotifyIcon`. Tooltip: `Edgeless — On (n windows)` / `Edgeless — Off`. Double-click opens
+settings. Right-click menu (all UI copy is English):
 
-- ☑ **Bật Edgeless** — enable Edgeless
-- **Thêm "<exe>" vào danh sách** — add the last foreground window's process (§4.4) by its full path; the label shows
-  the file name. Disabled when there is none or that path is already listed. Adds it with the default profile and
-  applies immediately.
-- **Đang áp dụng ▸** — submenu of managed windows (exe + title); clicking one restores that window.
-- **Cài đặt…** — settings
-- ☑ **Khởi động cùng Windows** — start with Windows
-- **Khởi động lại với quyền admin** — restart as administrator; shown only when the app is not elevated.
-- **Mở thư mục log** — open the log folder
-- **Thoát** — exit
+- ☑ **Enable Edgeless**
+- **Add "<exe>" to list** — add the last foreground window's process (§4.4) by its full path; the label shows the file
+  name. Disabled when there is none or that path is already listed. Adds it with the default profile and applies
+  immediately.
+- **Managed windows ▸** — submenu of managed windows (exe + title); clicking one restores that window.
+- **Settings…**
+- ☑ **Start with Windows**
+- **Restart as administrator** — shown only when the app is not elevated.
+- **Open log folder**
+- **Exit**
 
 ### 4.8 Settings window (plain Win32)
 
 One simple, fixed-size, DPI-scaled window:
 
-- Profile list (listbox, one line per profile: `<file name> — <folder>`) + **Thêm…** (add) / **Xoá** (remove)
-  buttons. **Thêm…** opens the standard Open File dialog (`GetOpenFileNameW`, filter `*.exe`, must exist); choosing a
-  path that is already listed just selects that profile; cancelling changes nothing.
-- Details of the selected profile: full path (read-only edit) + **Đổi…** button (same dialog, replaces the path),
-  ☑ enabled; monitor (combobox: "Màn hình hiện tại" / current monitor +
-  each monitor as `\\.\DISPLAYn — 2560×1440`); size mode (`fill` / `center` / `custom` + four x, y, w, h fields
-  enabled only for custom); ☑ add `WS_POPUP`; apply delay (ms).
+- Profile list (listbox, one line per profile: `<file name> — <folder>`; deep folders show the root and the last two
+  levels, e.g. `D:\…\Elden Ring\Game`; the list scrolls horizontally) + **Add…** / **Remove** buttons. **Add…** opens
+  the standard Open File dialog (`GetOpenFileNameW`, filter `*.exe`, must exist); choosing a path that is already
+  listed just selects that profile; cancelling changes nothing.
+- Details of the selected profile: full path (read-only edit) + **Change…** button (same dialog, replaces the path),
+  ☑ Enabled; monitor (combobox: "Current monitor" + each monitor as `\\.\DISPLAYn — 2560×1440`); size mode
+  (`fill` / `center` / `custom` + four x, y, w, h fields enabled only for custom); ☑ Add `WS_POPUP`; apply delay (ms).
 - General: hotkey (common control `msctls_hotkey32`), start with Windows (Off / Normal / As administrator).
-- Buttons **Lưu** (save), **Huỷ** (cancel), **Mở config.json** (open config.json).
+- Buttons **Save**, **Cancel**, **Open config.json**.
+- Paths chosen in the dialog and paths in a hand-edited config are resolved to the real file location (subst drives,
+  junctions, symlinks) with `CreateFileW` (attributes only) + `GetFinalPathNameByHandleW`, the same way process paths
+  are, so aliases still match.
 - Save → write the config and apply immediately (re-register the hotkey, re-apply changed profiles to managed
   windows).
 

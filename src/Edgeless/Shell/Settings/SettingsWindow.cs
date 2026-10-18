@@ -22,7 +22,7 @@ internal sealed unsafe class SettingsWindow
     private const uint SPI_GETNONCLIENTMETRICS = 0x0029;
     private const int ColorBtnFace = 15;
     private const int CwUseDefault = unchecked((int)0x80000000);
-    private static readonly string[] AutostartLabels = ["Tắt", "Bình thường", "Với quyền admin"];
+    private static readonly string[] AutostartLabels = ["Off", "Normal", "As administrator"];
 
     private static SettingsWindow? _current;
     private static bool _classRegistered;
@@ -43,7 +43,7 @@ internal sealed unsafe class SettingsWindow
         _draft = new SettingsDraft(current);
         RegisterClassOnce();
         fixed (char* cls = ClassName)
-        fixed (char* title = "Edgeless — Cài đặt")
+        fixed (char* title = "Edgeless — Settings")
         {
             _hwnd = PInvoke.CreateWindowEx(WINDOW_EX_STYLE.WS_EX_CONTROLPARENT, cls, title,
                 WINDOW_STYLE.WS_OVERLAPPED | WINDOW_STYLE.WS_CAPTION | WINDOW_STYLE.WS_SYSMENU | WINDOW_STYLE.WS_MINIMIZEBOX,
@@ -88,11 +88,11 @@ internal sealed unsafe class SettingsWindow
         const uint Edit = Tab | Win32Controls.ES_AUTOHSCROLL;
         Add(ProfileList, "LISTBOX", "", Tab | Win32Controls.LBS_NOTIFY | Win32Controls.LBS_NOINTEGRALHEIGHT
             | Win32Controls.WS_VSCROLL | Win32Controls.WS_HSCROLL, Win32Controls.WS_EX_CLIENTEDGE);
-        Add(AddButton, "BUTTON", "Thêm…", Tab);
-        Add(RemoveButton, "BUTTON", "Xoá", Tab);
+        Add(AddButton, "BUTTON", "Add…", Tab);
+        Add(RemoveButton, "BUTTON", "Remove", Tab);
         Add(PathEdit, "EDIT", "", Edit | Win32Controls.ES_READONLY, Win32Controls.WS_EX_CLIENTEDGE);
-        Add(ChangePathButton, "BUTTON", "Đổi…", Tab);
-        Add(EnabledCheck, "BUTTON", "Bật", Tab | Win32Controls.BS_AUTOCHECKBOX);
+        Add(ChangePathButton, "BUTTON", "Change…", Tab);
+        Add(EnabledCheck, "BUTTON", "Enabled", Tab | Win32Controls.BS_AUTOCHECKBOX);
         Add(MonitorCombo, "COMBOBOX", "", Combo);
         Add(SizeModeCombo, "COMBOBOX", "", Combo);
         foreach (var id in (int[])[CustomX, CustomY, CustomWidth, CustomHeight])
@@ -100,14 +100,14 @@ internal sealed unsafe class SettingsWindow
             Add(id, "EDIT", "", Edit, Win32Controls.WS_EX_CLIENTEDGE);
         }
 
-        Add(PopupCheck, "BUTTON", "Thêm WS_POPUP", Tab | Win32Controls.BS_AUTOCHECKBOX);
+        Add(PopupCheck, "BUTTON", "Add WS_POPUP", Tab | Win32Controls.BS_AUTOCHECKBOX);
         Add(DelayEdit, "EDIT", "", Edit, Win32Controls.WS_EX_CLIENTEDGE);
         Add(HotkeyControl, "msctls_hotkey32", "", Tab);
         Add(HotkeyWarning, "STATIC", "", 0);
         Add(AutostartCombo, "COMBOBOX", "", Combo);
-        Add(OpenConfigButton, "BUTTON", "Mở config.json", Tab);
-        Add(SaveButton, "BUTTON", "Lưu", Tab | Win32Controls.BS_DEFPUSHBUTTON);
-        Add(CancelButton, "BUTTON", "Huỷ", Tab);
+        Add(OpenConfigButton, "BUTTON", "Open config.json", Tab);
+        Add(SaveButton, "BUTTON", "Save", Tab | Win32Controls.BS_DEFPUSHBUTTON);
+        Add(CancelButton, "BUTTON", "Cancel", Tab);
 
         void Add(int id, string cls, string text, uint style, uint exStyle = 0)
             => _controls[id] = Win32Controls.Create(_hwnd, cls, text, style, id, exStyle);
@@ -205,7 +205,7 @@ internal sealed unsafe class SettingsWindow
             return;
         }
 
-        Win32Controls.SetText(_controls[HotkeyWarning], "Hotkey đang bị ứng dụng khác dùng");
+        Win32Controls.SetText(_controls[HotkeyWarning], "Hotkey is in use by another app");
     }
 
     private void Close()

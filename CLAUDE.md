@@ -133,7 +133,9 @@ edgeless/
 - `powershell -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1` — the gate (§5).
 
 ## 4. Conventions
-- Identifiers and code comments in English; replies to the user in Vietnamese.
+- **The whole project is English-only**: identifiers, comments, UI text (tray menu, settings, notifications,
+  dialogs), log messages, config keys, docs (README, specs, plans, CLAUDE.md files), commit messages and PR text.
+  No Vietnamese (or other languages) in any file. Only chat replies to the user are in Vietnamese.
 - LF line endings only.
 - Complex work: spec in `docs/specs/` → user feedback → plan in `docs/plans/` → user approval → code.
 - **Plans are always written with the `superpowers:writing-plans` skill** (invoke it, do not hand-roll a plan).

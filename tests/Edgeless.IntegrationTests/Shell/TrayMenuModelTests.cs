@@ -14,8 +14,8 @@ public sealed class TrayMenuModelTests
         var items = TrayMenuModel.Build(State());
 
         Assert.Equal(
-            ["Bật Edgeless", "Thêm \"game.exe\" vào danh sách", "Đang áp dụng", "Cài đặt…", "Khởi động cùng Windows",
-             "Khởi động lại với quyền admin", "Mở thư mục log", "Thoát"],
+            ["Enable Edgeless", "Add \"game.exe\" to list", "Managed windows", "Settings…", "Start with Windows",
+             "Restart as administrator", "Open log folder", "Exit"],
             items.Where(i => !i.IsSeparator).Select(i => i.Text));
         Assert.True(items.Single(i => i.Command == TrayCommand.ToggleEnabled).Checked);
         Assert.True(items.Single(i => i.Command == TrayCommand.ToggleAutostart).Checked);
@@ -48,7 +48,7 @@ public sealed class TrayMenuModelTests
     [Fact]
     public void Tooltip_ShowsStateAndCount()
     {
-        Assert.Equal("Edgeless — Đang bật (2 cửa sổ)", TrayMenuModel.Tooltip(true, 2));
-        Assert.Equal("Edgeless — Đang tắt", TrayMenuModel.Tooltip(false, 2));
+        Assert.Equal("Edgeless — On (2 windows)", TrayMenuModel.Tooltip(true, 2));
+        Assert.Equal("Edgeless — Off", TrayMenuModel.Tooltip(false, 2));
     }
 }

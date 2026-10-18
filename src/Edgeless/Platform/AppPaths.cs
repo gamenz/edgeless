@@ -32,7 +32,7 @@ internal static class AppPaths
     }
 
     public static string NotWritableMessage(string directory)
-        => "Edgeless cần ghi config.json và thư mục logs ngay cạnh file exe, nhưng không có quyền ghi vào:\n\n"
+        => "Edgeless needs to write config.json and the logs folder next to its exe, but this folder is not writable:\n\n"
             + directory
-            + "\n\nHãy chuyển Edgeless.exe sang một thư mục ghi được (ví dụ trong thư mục người dùng) rồi chạy lại.";
+            + "\n\nMove Edgeless.exe to a writable folder (for example under your user folder) and run it again.";
 }

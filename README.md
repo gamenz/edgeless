@@ -1,60 +1,64 @@
 # Edgeless
 
-App chạy nền ở system tray, tự động chuyển game đang chạy ở chế độ **Windowed** sang **Borderless Windowed**
-(phủ kín màn hình, không viền), tương tự "Borderless Gaming". Một file `.exe` duy nhất, không cần cài .NET.
+A background system-tray app that turns games running in **Windowed** mode into **Borderless Windowed**
+(full screen, no frame), similar to "Borderless Gaming". A single `.exe`, no .NET installation needed.
 
-Thiết kế chi tiết: [docs/specs/2026-10-18-edgeless-spec.md](docs/specs/2026-10-18-edgeless-spec.md).
+Detailed design: [docs/specs/2026-10-18-edgeless-spec.md](docs/specs/2026-10-18-edgeless-spec.md).
 
-## An toàn với anti-cheat
+## Anti-cheat safety
 
-Edgeless chỉ thao tác **cửa sổ** từ bên ngoài, giống một window manager (đổi style viền, vị trí, kích thước):
+Edgeless only manipulates **windows** from the outside, like a window manager (frame styles, position, size):
 
-- không inject DLL, không hook DirectX/OpenGL/Vulkan, không đọc/ghi bộ nhớ game, không gửi phím/chuột vào game;
-- chỉ mở process game với quyền `PROCESS_QUERY_LIMITED_INFORMATION` để đọc tên exe;
-- nếu Windows hoặc anti-cheat từ chối truy cập, Edgeless dừng lại và báo cho bạn, không tìm cách vượt qua.
+- no DLL injection, no DirectX/OpenGL/Vulkan hooks, no reading or writing game memory, no keyboard/mouse input sent
+  to games;
+- game processes are opened only with `PROCESS_QUERY_LIMITED_INFORMATION`, to read the exe path;
+- if Windows or an anti-cheat denies access, Edgeless stops and tells you; it never tries to work around it.
 
-Danh sách API được phép được kiểm tra tự động (`scripts/gate.ps1`, `InteropAuditTests`). Dù vậy, **không công cụ
-nào đảm bảo tuyệt đối không bị ban**: một số game cấm mọi phần mềm bên thứ ba trong điều khoản sử dụng. Hãy đọc
-điều khoản của game trước khi dùng.
+The list of allowed APIs is checked automatically (`scripts/gate.ps1`, `InteropAuditTests`). Even so, **no tool can
+guarantee you will never be banned**: some games forbid any third-party software in their terms of service. Read
+your game's terms before using it.
 
-## Sử dụng
+## Usage
 
-1. Chạy `Edgeless.exe`; icon xuất hiện ở system tray (Windows 11 có thể ẩn icon trong mũi tên **^**). App không có
-   cửa sổ chính; chạy `Edgeless.exe` lần nữa sẽ mở cửa sổ cài đặt.
-2. Thêm game, theo một trong hai cách:
-   - Mở game ở chế độ Windowed, focus vào game, rồi chuột phải icon → **Thêm "<game>.exe" vào danh sách**
-     (cách chắc chắn nhất, vì lưu đúng file exe đang chạy).
-   - **Cài đặt…** → **Thêm…** → chọn file exe của game.
+1. Run `Edgeless.exe`; an icon appears in the system tray (Windows 11 may hide it behind the **^** arrow). There is
+   no main window; running `Edgeless.exe` again opens the settings window.
+2. Add a game, either way:
+   - Start the game in Windowed mode, focus it, then right-click the tray icon → **Add "<game>.exe" to list**
+     (the most reliable way: it records the exe that is actually running).
+   - **Settings…** → **Add…** → pick the game's exe.
 
-   Game được nhận diện theo **đường dẫn đầy đủ** của file exe, nên hai game trùng tên exe ở hai thư mục khác nhau
-   không bị lẫn. Lưu ý: nếu chọn file launcher nhưng game thật chạy bằng một exe khác thì profile sẽ không khớp;
-   khi đó hãy thêm game từ menu tray lúc game đang chạy. Game được chuyển sang thư mục khác → dùng **Đổi…**.
-   Từ đó mỗi lần game được focus, Edgeless tự áp dụng borderless.
-3. **Hotkey** `Ctrl+Alt+B` (đổi được): bật/tắt borderless cho cửa sổ đang focus, kể cả khi game chưa có trong danh sách.
-4. **Cài đặt…** (hoặc double-click icon): mỗi game chọn màn hình, chế độ `fill` (phủ kín) / `center` (giữ kích thước,
-   căn giữa — hợp với game render độ phân giải thấp) / `custom`, thêm `WS_POPUP`, delay áp dụng.
-5. Game chạy bằng quyền admin → tray → **Khởi động lại với quyền admin**.
-6. Thoát app hoặc tắt Edgeless → mọi cửa sổ được trả về trạng thái ban đầu.
+   Games are identified by the **full path** of their exe, so two games with the same exe name in different folders
+   never get mixed up. Paths through subst drives, junctions or symlinks are resolved to the real location. Note: if
+   you pick a launcher but the game itself runs as a different exe, the profile will not match; add the game from the
+   tray while it is running instead. If a game moves to another folder, use **Change…**.
+   From then on, Edgeless applies borderless every time the game gets focus.
+3. **Hotkey** `Ctrl+Alt+B` (configurable): toggles borderless on the focused window, even for games not in the list.
+4. **Settings…** (or double-click the icon): per game, choose the monitor, the size mode `fill` (cover the monitor) /
+   `center` (keep size, centered — good for games rendering below the monitor resolution) / `custom`, `WS_POPUP`,
+   and the apply delay.
+5. Game running as administrator → tray → **Restart as administrator**.
+6. Exiting the app or disabling Edgeless restores every window to its original state.
 
-| Dữ liệu | Vị trí |
+| Data | Location |
 |---|---|
-| Cấu hình | `config.json` cạnh `Edgeless.exe` (file hỏng sẽ được sao lưu và thay bằng mặc định) |
-| Log | `logs\edgeless.log` cạnh `Edgeless.exe` (xoay vòng 1 MB × 3 file) |
+| Configuration | `config.json` next to `Edgeless.exe` (a malformed file is backed up and replaced by defaults) |
+| Logs | `logs\edgeless.log` next to `Edgeless.exe` (rolled at 1 MB, 3 files kept) |
 
-Edgeless là app portable: copy cả thư mục là mang theo được cấu hình. Đặt exe ở thư mục ghi được (không đặt trong
-`Program Files`); nếu không ghi được, app sẽ báo lỗi và thoát.
+Edgeless is portable: copy the folder and the configuration comes along. Keep the exe in a writable folder (not under
+`Program Files`); otherwise the app shows an error and exits.
 
-## Hiệu năng (đo trên bản publish, 2026-10-18)
+## Performance (measured on the published build, 2026-10-18)
 
-| Tiêu chí | Yêu cầu | Đo được |
+| Criterion | Target | Measured |
 |---|---|---|
-| Kích thước exe (Native AOT) | < 10 MB | 3.3 MB |
-| CPU khi rảnh | ~0% | 0 ms trong 60 giây |
-| Private memory khi rảnh | < 30 MB | 5.6 MB (working set 17.3 MB) |
+| Exe size (Native AOT) | < 10 MB | 3.3 MB |
+| Idle CPU | ~0% | 0 ms over 60 seconds |
+| Idle private memory | < 30 MB | 5.6 MB (working set 17.3 MB) |
 
 ## Build
 
-Cần .NET 10 SDK và Visual Studio Build Tools với workload "Desktop development with C++" (cho Native AOT).
+Requires the .NET 10 SDK and Visual Studio Build Tools with the "Desktop development with C++" workload (for Native
+AOT).
 
 ```bash
 dotnet test
@@ -68,22 +72,23 @@ dotnet publish src/Edgeless -c Release
 powershell -NoProfile -ExecutionPolicy Bypass -File scripts/gate.ps1
 ```
 
-Exe nằm ở `src/Edgeless/bin/Release/net10.0-windows/win-x64/publish/Edgeless.exe`. Test tích hợp
-(`tests/Edgeless.IntegrationTests`) mở các cửa sổ thật (trong suốt) nên cần phiên desktop đang đăng nhập.
+The exe is written to `src/Edgeless/bin/Release/net10.0-windows/win-x64/publish/Edgeless.exe`. Integration tests
+(`tests/Edgeless.IntegrationTests`) open real (transparent) windows, so they need a signed-in desktop session.
 
-## Checklist kiểm tra thủ công
+## Manual test checklist
 
-Tự động hoá đã phủ: tính style/rect, cấu hình, guard, apply/restore trên cửa sổ thật, re-apply khi game tự reset,
-minimize, hotkey, cửa sổ bị huỷ, autostart (trên registry key thử nghiệm). Các mục dưới cần kiểm tra bằng tay:
+Automated tests cover: style/rect computation, configuration, the guard, apply/restore on real windows, re-apply when
+a game resets itself, minimize, hotkey, destroyed windows, path resolution through junctions, autostart (on a test
+registry key). The items below need a manual check:
 
-- [ ] Hai màn hình, màn hình phụ ở bên trái (toạ độ âm): game phủ đúng màn hình đã chọn.
-- [ ] DPI khác nhau giữa hai màn hình (100% / 150%): vị trí đúng, cửa sổ cài đặt hiển thị rõ nét.
-- [ ] Game chạy bằng quyền admin, Edgeless không admin: có thông báo, không crash; "Khởi động lại với quyền admin" hoạt động.
-- [ ] Bật "Khởi động cùng Windows" (Bình thường và Với quyền admin), đăng xuất rồi đăng nhập lại: app chỉ hiện ở tray.
-- [ ] Đổi hotkey trong cài đặt; chọn một hotkey đang bị app khác dùng → có cảnh báo.
-- [ ] Sửa tay `config.json` thành JSON hỏng → khởi động lại → có file sao lưu và thông báo.
-- [ ] Khởi động lại Explorer → icon tray xuất hiện lại.
-- [ ] Đăng xuất khi đang có cửa sổ borderless → cửa sổ được khôi phục.
-- [ ] Vài game thật.
+- [ ] Two monitors, the secondary on the left (negative coordinates): the game covers the selected monitor.
+- [ ] Different DPI per monitor (100% / 150%): correct position, the settings window renders sharply.
+- [ ] Game running as administrator, Edgeless not elevated: a notification, no crash; "Restart as administrator" works.
+- [ ] "Start with Windows" (Normal and As administrator), sign out and back in: the app shows only in the tray.
+- [ ] Change the hotkey in settings; choose one used by another app → a warning is shown.
+- [ ] Hand-edit `config.json` into invalid JSON → restart → a backup file and a notification.
+- [ ] Restart Explorer → the tray icon comes back.
+- [ ] Sign out while a window is borderless → the window is restored.
+- [ ] A few real games.
 
-Muốn xem cửa sổ game giả khi test tay: `Edgeless.TestWindow.exe --visible --mode reset-once`.
+To see the fake game window during manual tests: `Edgeless.TestWindow.exe --visible --mode reset-once`.

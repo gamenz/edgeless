@@ -34,35 +34,35 @@ internal sealed record TrayMenuItem(
 internal static class TrayMenuModel
 {
     public static string Tooltip(bool enabled, int managedCount)
-        => enabled ? $"Edgeless — Đang bật ({managedCount} cửa sổ)" : "Edgeless — Đang tắt";
+        => enabled ? $"Edgeless — On ({managedCount} windows)" : "Edgeless — Off";
 
     public static List<TrayMenuItem> Build(TrayMenuState state)
     {
         var addText = state.LastForegroundExe is null
-            ? "Thêm cửa sổ đang focus vào danh sách"
-            : $"Thêm \"{state.LastForegroundExe}\" vào danh sách";
+            ? "Add focused window to list"
+            : $"Add \"{state.LastForegroundExe}\" to list";
         var managed = state.Managed
             .Select(m => new TrayMenuItem(m.Label, TrayCommand.RestoreManaged, Hwnd: m.Hwnd))
             .ToList();
 
         var items = new List<TrayMenuItem>
         {
-            new("Bật Edgeless", TrayCommand.ToggleEnabled, Checked: state.Enabled),
+            new("Enable Edgeless", TrayCommand.ToggleEnabled, Checked: state.Enabled),
             new(addText, TrayCommand.AddLastForeground,
                 Enabled: state.LastForegroundExe is not null && !state.LastForegroundListed),
-            new("Đang áp dụng", null, Enabled: managed.Count > 0) { Children = managed },
+            new("Managed windows", null, Enabled: managed.Count > 0) { Children = managed },
             TrayMenuItem.Separator,
-            new("Cài đặt…", TrayCommand.OpenSettings),
-            new("Khởi động cùng Windows", TrayCommand.ToggleAutostart, Checked: state.AutostartOn),
+            new("Settings…", TrayCommand.OpenSettings),
+            new("Start with Windows", TrayCommand.ToggleAutostart, Checked: state.AutostartOn),
         };
         if (!state.IsElevated)
         {
-            items.Add(new("Khởi động lại với quyền admin", TrayCommand.RestartElevated));
+            items.Add(new("Restart as administrator", TrayCommand.RestartElevated));
         }
 
-        items.Add(new("Mở thư mục log", TrayCommand.OpenLogFolder));
+        items.Add(new("Open log folder", TrayCommand.OpenLogFolder));
         items.Add(TrayMenuItem.Separator);
-        items.Add(new("Thoát", TrayCommand.Exit));
+        items.Add(new("Exit", TrayCommand.Exit));
         return items;
     }
 }

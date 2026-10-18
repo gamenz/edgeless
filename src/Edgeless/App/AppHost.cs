@@ -49,7 +49,7 @@ internal sealed partial class AppHost : IDisposable
         if (load.InvalidBackupPath is not null)
         {
             _notifier.Notify("config-invalid", "Edgeless",
-                $"config.json bị lỗi, đã sao lưu thành {Path.GetFileName(load.InvalidBackupPath)} và dùng cấu hình mặc định.");
+                $"config.json was invalid; it was backed up as {Path.GetFileName(load.InvalidBackupPath)} and defaults are in use.");
         }
     }
 
@@ -102,7 +102,7 @@ internal sealed partial class AppHost : IDisposable
         {
             var name = string.Join("+", hotkey.Modifiers.Append(hotkey.Key));
             _log.Warn($"Hotkey {name} could not be registered");
-            _notifier.Notify("hotkey", "Edgeless", $"Không đăng ký được hotkey {name} (có thể ứng dụng khác đang dùng).");
+            _notifier.Notify("hotkey", "Edgeless", $"Could not register hotkey {name} (another app may be using it).");
         }
 
         return ok;
